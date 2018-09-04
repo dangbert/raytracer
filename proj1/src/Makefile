@@ -2,7 +2,7 @@ CC = g++
 CFLAGS = -std=c++98 -g -Wall -Wextra -Wpedantic -pedantic-errors
 
 NAME = proj1
-OBJS = main.o RayTracer.o
+OBJS = main.o RayTracer.o SettingsNFF.o
 DEPS = *.h
 
 %.o: %.c $(DEPS)
