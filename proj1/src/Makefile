@@ -1,16 +1,21 @@
 CC = g++
-CFLAGS = -std=c++98 -g -Wall -Wextra -Wpedantic -pedantic-errors
+CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors
+#-std=c++98
 
 NAME = proj1
 OBJS = main.o RayTracer.o SettingsNFF.o
 DEPS = *.h
+INCLUDE = -I../../common
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
 
+# build target executable
 $(NAME): $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^
 
+# build object files for each cpp file
+# $@ is the target, $^ are the dependencies
+%.o: %.cpp $(DEPS)
+	$(CC) $(INCLUDE) -c -o $@ $< $(CFLAGS)
 
 .PHONY: clean
 clean:

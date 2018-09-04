@@ -16,9 +16,13 @@ SettingsNFF::SettingsNFF() {
 // reset to default settings
 void SettingsNFF::reset() {
     // default background color is 0,0,0
-    for (int i=0; i<3; i++) {
-        bColor[i] = i;
-    }
+    b_color = Eigen::Vector3d(0,0,0);
+    v_from = Eigen::Vector3d(0,0,0);
+    v_at = Eigen::Vector3d(0,0,0);
+    v_up = Eigen::Vector3d(0,0,0);
+    v_angle = 0;
+    v_hither = 0;
+    v_resolution = Eigen::Vector2i(0,0);
 }
 
 /**
@@ -32,42 +36,83 @@ void SettingsNFF::reset() {
 int SettingsNFF::readFile(std::string fname) {
     reset(); // reset to default settings
     std::string line;
+    std::string mode = "";
     ifstream f(fname);
 
     while (std::getline(f, line)) {
         // split line on space delimeter to vector of strings
-        std::istringstream iss(line);
-        std::istream_iterator<std::string> begin(iss);
+        std::istringstream iss1(line);
+        std::istream_iterator<std::string> begin(iss1);
         std::istream_iterator<std::string> end;
         std::vector<std::string> tokens(begin, end);
 
-        cout << line << "\tlength=" << tokens.size() << endl;
+        //cout << line << "\tlength=" << tokens.size() << " mode=" << mode << endl;
 
+        std::istringstream iss(line); // string stream to use below
+        std::string tmp;
+        // background color
         if (tokens.at(0) == "b") {
-            std::istringstream iss(line);       // start string stream over
-            std::string tmp;
-            float r, g, b;
-            if (!(iss >> tmp >> r >> g >> b)) { return 1; } // error
-            cout << "read to (" << r << ", " << g << ", " << b << ")" << endl;
-            bColor[0] = r;
-            bColor[1] = g;
-            bColor[2] = b;
+            mode = "b";
+            if (!(iss >> tmp >> b_color[0] >> b_color[1] >> b_color[2])) { return 1; } // error
+        }
+        // viewing position
+        else if (tokens.at(0) == "v" || mode == "v") {
+            /*
+                v
+                from %g %g %g
+                at %g %g %g
+                up %g %g %g
+                angle %g
+                hither %g
+                resolution %d %d
+            */
+            mode = "v";
+
+            if (tokens.at(0) == "from") {
+                if (!(iss >> tmp >> v_from[0] >> v_from[1] >> v_from[2])) { return 1; } // error
+            }
+            if (tokens.at(0) == "at") {
+                if (!(iss >> tmp >> v_at[0] >> v_at[1] >> v_at[2])) { return 1; }
+            }
+            if (tokens.at(0) == "up") {
+                if (!(iss >> tmp >> v_up[0] >> v_up[1] >> v_up[2])) { return 1; }
+            }
+            if (tokens.at(0) == "angle") {
+                if (!(iss >> tmp >> v_angle)) { return 1; }
+            }
+            if (tokens.at(0) == "hither") {
+                if (!(iss >> tmp >> v_hither)) { return 1; }
+            }
+            if (tokens.at(0) == "resolution") {
+                if (!(iss >> tmp >> v_resolution[0] >> v_resolution[1])) { return 1; }
+            }
 
         }
-        return 2; // for now
 
     }
     return 0; // success
 }
 
+// helper function for operator<<
+void SettingsNFF::printVector3d(std::ostream &sout, Eigen::Vector3d vect, std::string label) {
+    sout << label << ": ";
+    for (int i=0; i<3; i++) {
+        sout << vect[i] << " ";
+    }
+    sout << endl;
+}
+
 // print out the NFF settings stored in this object for debugging
 std::ostream& operator<<(std::ostream &sout, const SettingsNFF &nff) {
     sout << "\n---NFF Settings---\n";
-    sout << "background color: ";
-    for (int i=0; i<3; i++) {
-        sout << nff.bColor[i] << " ";
-    }
-    sout << endl;
+    SettingsNFF::printVector3d(sout, nff.b_color, "b_color");
+    SettingsNFF::printVector3d(sout, nff.v_from, "v_from");
+    SettingsNFF::printVector3d(sout, nff.v_at, "v_at");
+    SettingsNFF::printVector3d(sout, nff.v_up, "v_up");
+    sout << "v_angle: " << nff.v_angle << endl;
+    sout << "v_hither: " << nff.v_hither << endl;
+    // TODO: consider doing above prints like this as well rather than using a helper function
+    sout << "v_resolution: " << nff.v_resolution[0] << " " << nff.v_resolution[1] << endl;
 
     sout << "------------------\n";
     return sout;

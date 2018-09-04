@@ -7,6 +7,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <Eigen/Dense>
 
 class SettingsNFF {
     public:
@@ -16,6 +17,15 @@ class SettingsNFF {
         void reset();
 
     private:
-        float bColor[3];
+        static void printVector3d(std::ostream &sout, Eigen::Vector3d vect, std::string label);
+
+        Eigen::Vector3d b_color; // background color
+        Eigen::Vector3d v_from;
+        Eigen::Vector3d v_at;
+        Eigen::Vector3d v_up;
+        double v_angle;
+        double v_hither;
+        Eigen::Vector2i v_resolution;
+
 };
 #endif
