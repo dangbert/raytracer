@@ -7,6 +7,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include <Eigen/Dense>
 
 class SettingsNFF {
@@ -26,6 +27,9 @@ class SettingsNFF {
         double v_angle;
         double v_hither;
         Eigen::Vector2i v_resolution;
+        Eigen::Vector3d f_rgb;   // fill color
+        // vector of polygons (a polygon is a vector of Eigen::Vector3d)
+        std::vector< std::vector<Eigen::Vector3d> > polygons;
 
 };
 #endif
