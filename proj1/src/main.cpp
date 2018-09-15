@@ -8,7 +8,6 @@ using namespace std;
 
 // my driver
 int main() {
-
     SettingsNFF nff = SettingsNFF();
     cout << nff << endl;
     int status = nff.readFile("../tetra-3.nff");
