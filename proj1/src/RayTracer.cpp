@@ -2,7 +2,6 @@
 #include "RayTracer.h"
 #include <assert.h>
 #include <math.h>
-#include "Ray.h"
 using namespace std;
 
 RayTracer::RayTracer(SettingsNFF nff) {
@@ -33,17 +32,18 @@ void RayTracer::render(std::string filename) {
     double initY = nff.v_at[1] - deltaX * ((double) nff.v_resolution[1]/2) + deltaX/2;
 
     // iterate over all pixels in the image (0,0) is the top left corner pixel
+    // TODO: create array/matrix of pixel colors
     for (int i=0; i<nff.v_resolution[0]; i++) {
         for (int j=0; j<nff.v_resolution[1]; j++) {
             // position of center of pixel (i,j)
             Eigen::Vector3d pos = Eigen::Vector3d(initX, initY, nff.v_at[2]);
             // ray from camera through center of pixel
             Ray ray = Ray(nff.v_from, pos);
+            Eigen::Vector3d color = trace(ray);
 
         }
 
     }
-
 
 
     cout << "w: " << w << endl;
@@ -51,4 +51,17 @@ void RayTracer::render(std::string filename) {
     cout << "v: " << v << endl;
     cout << "d: " << d << endl;
     cout << "deltaX: " << deltaX << endl;
+}
+
+/**
+ * return the color for the pixel corresponding to this ray
+ */
+Eigen::Vector3d RayTracer::trace(Ray ray) {
+    // TODO: finish this
+    //std::vector< std::vector<Eigen::Vector3d> > polygons;
+    // iterate over polygons
+    for (unsigned int i=0; i<nff.polygons.size(); i++) {
+        // check where ray intersects this polygon
+
+    }
 }

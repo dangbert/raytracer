@@ -4,7 +4,7 @@ CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors -O2
 #-std=c++98
 
 NAME = proj1
-OBJS = main.o RayTracer.o SettingsNFF.o Ray.o
+OBJS = main.o RayTracer.o SettingsNFF.o Ray.o Polygon.o Triangle.o
 DEPS = *.h
 INCLUDE = -I../../common
 

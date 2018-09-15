@@ -26,10 +26,13 @@ class SettingsNFF {
         Eigen::Vector3d v_at;
         Eigen::Vector3d v_up;
         double v_angle;
+        // distance of plane in front of camera for which things closer to the camera
+        // wont' be rendered:
         double v_hither;
         Eigen::Vector2i v_resolution;    // x resolution, y resolution
         Eigen::Vector3d f_rgb;           // fill color
         // vector of polygons (a polygon is a vector of Eigen::Vector3d)
+        // TODO: replace with Polygon objects
         std::vector< std::vector<Eigen::Vector3d> > polygons;
 };
 #endif
