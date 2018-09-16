@@ -32,7 +32,6 @@ class SettingsNFF {
         double v_hither;
         Eigen::Vector2i v_resolution;    // x resolution, y resolution
         Eigen::Vector3d f_rgb;           // fill color
-        // vector of polygons (a polygon is a vector of Eigen::Vector3d)
-        std::vector<Polygon> polygons;
+        std::vector<Polygon> polygons;   // polygons in scene
 };
 #endif

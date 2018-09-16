@@ -148,13 +148,11 @@ std::ostream& operator<<(std::ostream &sout, const SettingsNFF &nff) {
     sout << "v_resolution: " << nff.v_resolution[0] << " " << nff.v_resolution[1] << endl;
     SettingsNFF::printVector3d(sout, nff.f_rgb, "f_rgb");
 
-    sout << "polygons (" << nff.polygons.size() << "):" << endl;
+    sout << nff.polygons.size() << " polygons total" << endl;
     /*
-    for (std::vector<std::vector<Eigen::Vector3d>>::size_type i = 0; i != nff.polygons.size(); i++) {
-        sout << "   polygon " << i << ":" << endl;
-        for (std::vector<Eigen::Vector3d>::size_type k = 0; k != nff.polygons[i].size(); k++) {
-            sout << "      " << nff.polygons[i][k][0] << " " << nff.polygons[i][k][1] << " " << nff.polygons[i][k][2] << " " << endl;
-        }
+    sout << endl;
+    for (std::vector<Polygon>::size_type i = 0; i != nff.polygons.size(); i++) {
+        sout << nff.polygons[i] << endl;
     }
     */
     sout << "------------------\n";

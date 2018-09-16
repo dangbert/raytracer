@@ -10,7 +10,8 @@
 class Triangle {
     public:
         Triangle(Eigen::Vector3d p1, Eigen::Vector3d p2, Eigen::Vector3d p3);
-        double intersect(Ray ray);
+        double intersect(Ray ray) const;
+        friend std::ostream &operator<<(std::ostream &sout, const Triangle &tri);
 
         // vertices of triangle in 3D space
         Eigen::Vector3d p1;

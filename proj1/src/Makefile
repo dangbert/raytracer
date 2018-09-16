@@ -24,4 +24,7 @@ clean:
 
 .PHONY: run
 run:
-	make -B && ./$(NAME)
+	make -B && test
+
+test:
+	./$(NAME) ../teacher_tetra-3.nff

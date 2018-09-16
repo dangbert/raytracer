@@ -13,6 +13,8 @@ RayTracer::RayTracer(SettingsNFF nff) {
  * for this project, FOV is the whole image
  *   (including the edge of pixels on each side rather than their centers)
  *   and pixels are square
+ *
+ * filename: name for output file (should end in .ppm)
  */
 void RayTracer::render(std::string filename) {
     cout << "\nrendering" << endl;
@@ -54,14 +56,17 @@ void RayTracer::render(std::string filename) {
             Eigen::Vector3d pos = Eigen::Vector3d(initX, initY, nff.v_at[2]);
             Ray ray = Ray(nff.v_from, pos);     // ray from camera through center of pixel
             Eigen::Vector3d color = trace(ray);
+            std::cout << "final color:\n" << color << endl;
             // set color of pixel
             for (int k=0; k<3; k++) {
                 pixels[j*(WIDTH*3) + (i*3) + k] = color[k] * 255;
             }
+            break; // TODO: remove this after testing
         }
+        break; // TODO: remove this after testing
     }
     // write image to file
-    FILE *f = fopen("out.ppm","wb");
+    FILE *f = fopen(filename.c_str(), "wb");
     fprintf(f, "P6\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
     fwrite(pixels, 1, HEIGHT*WIDTH*3, f);
     fclose(f);

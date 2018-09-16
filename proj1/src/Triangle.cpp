@@ -11,7 +11,7 @@ Triangle::Triangle(Eigen::Vector3d p1, Eigen::Vector3d p2, Eigen::Vector3d p3) {
  * returns distance along ray at which it intersects this triangle
  * (-1 if no intersection)
  */
-double Triangle::intersect(Ray ray) {
+double Triangle::intersect(Ray ray) const {
     // TODO: use hither
     // ray: e + td
     // triangle a + B(b-a) + g(c-a)
@@ -32,4 +32,13 @@ double Triangle::intersect(Ray ray) {
         return (x - ray.eye).norm();
     }
     return -1;
+}
+
+// print out this object for debugging
+std::ostream &operator<<(std::ostream &sout, const Triangle &tri) {
+    sout << "Triangle: ";
+    sout << "(" << tri.p1[0] << "," << tri.p1[1] << "," << tri.p1[2] << "), ";
+    sout << "(" << tri.p2[0] << "," << tri.p2[1] << "," << tri.p2[2] << "), ";
+    sout << "(" << tri.p3[0] << "," << tri.p3[1] << "," << tri.p3[2] << std::endl;
+    return sout;
 }

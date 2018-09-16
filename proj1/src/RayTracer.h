@@ -3,6 +3,8 @@
 #include <Eigen/Dense>
 #include "SettingsNFF.h"
 #include "Ray.h"
+#include "Polygon.h"
+#include "Triangle.h"
 /* File: RayTracer.h
     Dan Engbert - UMBC CMSC435 F18 Project 1
 */
