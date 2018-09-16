@@ -9,6 +9,7 @@
 #include <fstream>
 #include <vector>
 #include <Eigen/Dense>
+#include "Polygon.h"
 
 class SettingsNFF {
     public:
@@ -32,7 +33,6 @@ class SettingsNFF {
         Eigen::Vector2i v_resolution;    // x resolution, y resolution
         Eigen::Vector3d f_rgb;           // fill color
         // vector of polygons (a polygon is a vector of Eigen::Vector3d)
-        // TODO: replace with Polygon objects
-        std::vector< std::vector<Eigen::Vector3d> > polygons;
+        std::vector<Polygon> polygons;
 };
 #endif

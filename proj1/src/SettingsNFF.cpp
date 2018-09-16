@@ -40,6 +40,7 @@ int SettingsNFF::readFile(std::string fname) {
     std::string mode = "";  // for sections with multiple lines
     int p_remaining = 0;    // number of vertices remaining (when mode == "p")
     ifstream f(fname);
+    std::vector<Eigen::Vector3d> cur_vertices;   // vertices for current polygon
 
     while (std::getline(f, line)) {
         // split line on space delimeter to vector of strings
@@ -73,16 +74,18 @@ int SettingsNFF::readFile(std::string fname) {
             if (tokens.at(0) == "p") {
                 // store number of vertices to process
                 if (!(iss >> tmp >> p_remaining)) { return 1; }
-                // create empty polygon object
-                polygons.push_back(std::vector<Eigen::Vector3d>());
+                cur_vertices.clear();
                 continue; // advance to next line of file
             }
             Eigen::Vector3d vert; // vertex
             if (!(iss >> vert[0] >> vert[1] >> vert[2])) { return 1; }
-            polygons.back().push_back(vert);
+            cur_vertices.push_back(vert);
 
             if (--p_remaining == 0) {
                 mode = ""; // "p" mode is over
+                // create Polygon object using these vertices
+                polygons.push_back(Polygon(cur_vertices));
+                cur_vertices.clear();
             }
         }
         // viewing position
