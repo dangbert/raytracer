@@ -2,6 +2,7 @@
 #include <iostream>
 #include <assert.h>
 #include "RayTracer.h"
+using Eigen::Vector3d;
 
 using namespace std;
 
@@ -22,27 +23,61 @@ int main(int argc, char *argv[]) {
 
 
     // create Ray Tracer using these settings
-    RayTracer ray = RayTracer(nff);
+    RayTracer rayT = RayTracer(nff);
 
     // test my code
     tests(nff);
 
 
-    //ray.render("out.ppm");
+    //rayT.render("out.ppm");
 
     return 0;
 }
 
 void tests(SettingsNFF nff) {
     RayTracer rayT = RayTracer(nff);
-    vector<Eigen::Vector3d> vertices;
-    vertices.push_back(Eigen::Vector3d(-1, -1, 1));
-    vertices.push_back(Eigen::Vector3d(-1, -0.5, 0.5));
-    vertices.push_back(Eigen::Vector3d(-0.5, -1, 0.5));
 
-    Polygon poly = Polygon(vertices);
-    cout << poly << endl;
+    cout << "poly1:" << endl;
+    vector<Vector3d> vertices;
+    vertices.push_back(Vector3d(-1, -1, 1));
+    vertices.push_back(Vector3d(-1, -0.5, 0.5));
+    vertices.push_back(Vector3d(-0.5, -1, 0.5));
+    Polygon poly1 = Polygon(vertices);
+    cout << poly1 << endl;
+    poly1.printTriangles();
 
-    poly.printTriangles();
+    // test creation of triangle fan
+    cout << "poly2:" << endl;
+    vertices.clear();
+    vertices.push_back(Vector3d(0,0,5));
+    vertices.push_back(Vector3d(3,0,5));
+    vertices.push_back(Vector3d(4,1,5));
+    vertices.push_back(Vector3d(3,2,5));
+    vertices.push_back(Vector3d(1.5,3,5));
+    vertices.push_back(Vector3d(0,1,5));
+    Polygon poly2 = Polygon(vertices);
+    cout << poly2 << endl;
+    poly2.printTriangles();
+    vector<Triangle> tris = poly2.getTriangles();
 
+
+
+    // test triangle and ray intersections
+    //Ray r = Ray(Vector3d(2,1,0), Vector3d(2,1,5));
+    //Triangle tri = Triangle(Vector3d(1,2,2), Vector3d(3,3,3), Vector3d(4,5,4));
+    //Ray r = Ray(Vector3d(0,0,0), Vector3d(2.25,3,2.75));
+    //Triangle tri = Triangle(Vector3d(4,2,4), Vector3d(5,-5,5), Vector3d(3,-2,6));
+    Triangle tri = tris[0];
+    //Ray r = Ray(Vector3d(0,0,-65), Vector3d(0,0,5));
+    //Ray r = Ray(Vector3d(2,1,0), Vector3d(2,1,5));
+    Ray r = Ray(Vector3d(2,1,0), Vector3d(2,0,5));
+
+    cout << "\nTESTING Triangle intersection:" << endl;
+    int res = tri.intersect(r);
+    cout << "res = " << res << endl;
+
+    cout << "\nTESTING Polygon intersection:" << endl;
+    cout << "intersecting " << poly2 << " with " << r << endl;
+    res = poly2.intersect(r);
+    cout << "res = " << res << endl;
 }

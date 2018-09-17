@@ -25,6 +25,7 @@ double Polygon::intersect(Ray ray) const {
     int dist = -1;
     for (unsigned int i=0; i<triangles.size(); i++) {
         int res = triangles[i].intersect(ray);
+        std::cout << "\ttriangle res = " << res << std::endl;
         if ((dist == -1) || (res != -1 && res < dist)) {
             dist = res;
         }
@@ -33,13 +34,21 @@ double Polygon::intersect(Ray ray) const {
 }
 
 /**
+ * return the triangle fan representing this polygon
+ * (for debugging)
+ */
+std::vector<Triangle> Polygon::getTriangles() const {
+    return triangles;
+}
+
+/**
  * print out the triangle fan for this polygon
  * (for debugging)
  */
 void Polygon::printTriangles() const {
+    std::cout << "Triangles in this polygon:" << std::endl;
     for (unsigned int i=0; i<triangles.size(); i++) {
-        std::cout << "triangle" << i << ":" << std::endl;
-        std::cout << triangles[i] << std::endl;
+        std::cout << "   " << triangles[i] << std::endl;
     }
 }
 

@@ -9,6 +9,7 @@
 class Ray {
     public:
         Ray(Eigen::Vector3d eye, Eigen::Vector3d dir);
+        friend std::ostream &operator<<(std::ostream &sout, const Ray &ray);
 
         Eigen::Vector3d eye;   // eye
         Eigen::Vector3d dir;   // direction

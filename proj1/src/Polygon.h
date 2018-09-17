@@ -14,6 +14,7 @@ class Polygon {
         Polygon(std::vector<Eigen::Vector3d> vertices);
         double intersect(Ray ray) const;
         friend std::ostream &operator<<(std::ostream &sout, const Polygon &poly);
+        std::vector<Triangle> getTriangles() const;
         void printTriangles() const;
 
      private:

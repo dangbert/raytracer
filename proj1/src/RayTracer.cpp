@@ -55,15 +55,16 @@ void RayTracer::render(std::string filename) {
             // position of center of pixel (i,j)
             Eigen::Vector3d pos = Eigen::Vector3d(initX, initY, nff.v_at[2]);
             Ray ray = Ray(nff.v_from, pos);     // ray from camera through center of pixel
+            // get the color for this pixel
             Eigen::Vector3d color = trace(ray);
-            std::cout << "final color:\n" << color << endl;
+            //std::cout << "final color: " << color[0] << "," << color[1] << "," << color[2] << endl;
             // set color of pixel
             for (int k=0; k<3; k++) {
                 pixels[j*(WIDTH*3) + (i*3) + k] = color[k] * 255;
             }
-            break; // TODO: remove this after testing
+            //break; // TODO: remove this after testing
         }
-        break; // TODO: remove this after testing
+        //break; // TODO: remove this after testing
     }
     // write image to file
     FILE *f = fopen(filename.c_str(), "wb");
@@ -74,7 +75,8 @@ void RayTracer::render(std::string filename) {
 }
 
 /**
- * return the color for the pixel corresponding to this ray
+ * return the color of the first object hit by this ray
+ * returns the background color if no object is hit
  */
 Eigen::Vector3d RayTracer::trace(Ray ray) {
     //std::cout << "in trace, size = " << nff.polygons.size() << endl;
