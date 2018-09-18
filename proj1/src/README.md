@@ -13,4 +13,5 @@ Status:
 
 Tested so far:
 * Polygon creates triangle fan correctly
-* [FAILED] triangle ray intersection
+* triangle ray intersection might be working??? needs more testing
+* my calculated initX and initY differ from the teacher's

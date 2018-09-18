@@ -25,7 +25,10 @@ double Polygon::intersect(Ray ray) const {
     int dist = -1;
     for (unsigned int i=0; i<triangles.size(); i++) {
         int res = triangles[i].intersect(ray);
-        std::cout << "\ttriangle res = " << res << std::endl;
+
+        if (res != -1) // for debugging
+            std::cout << "\ttriangle res = " << res << std::endl;
+
         if ((dist == -1) || (res != -1 && res < dist)) {
             dist = res;
         }

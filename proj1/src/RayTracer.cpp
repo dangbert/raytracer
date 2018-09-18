@@ -29,9 +29,30 @@ void RayTracer::render(std::string filename) {
     // deltaX = real world width / pixel width
     double deltaX = (d * tan(nff.v_angle/2 * M_PI/180)) / (nff.v_resolution[0]/2);
 
-    // position of center of top left corner pixel (real world coordinates)
-    double initX = nff.v_at[0] - deltaX * ((double) nff.v_resolution[0]/2) + deltaX/2;
-    double initY = nff.v_at[1] - deltaX * ((double) nff.v_resolution[1]/2) + deltaX/2;
+    // TODO: my w,u,v, deltaX are correct
+    //       but initX, initY are wrong
+    //       teacher values:
+    //          left limit: -1.69647
+    //          top limit: 1.69647
+    //       mine are both:
+    //          initX: -1.70057
+
+
+    //deltaX = 1.0;
+    Vector3d v_at = nff.v_at;
+    Eigen::Vector2i v_resolution = nff.v_resolution;
+    //v_resolution[0] = 8;
+    //v_resolution[1] = 9;
+    //v_at[0] = 20;
+    //v_at[1] = 20.5;
+
+    // position of CENTER of top left corner pixel (real world coordinates)
+    //                       deltaX * (numPixels to move)
+    double initX = v_at[0] - deltaX * ((double) v_resolution[0]/2 - (double) 1/2);
+    double initY = v_at[1] + deltaX * ((double) v_resolution[1]/2 - (double) 1/2);
+
+    //double initX = nff.v_at[0] - deltaX * ((double) nff.v_resolution[0]/2) + deltaX/2;
+    //double initY = nff.v_at[1] - deltaX * ((double) nff.v_resolution[1]/2) + deltaX/2;
 
     cout << "w: " << w << endl;
     cout << "u: " << u << endl;
@@ -40,6 +61,7 @@ void RayTracer::render(std::string filename) {
     cout << "deltaX: " << deltaX << endl;
     cout << "initX: " << initX << endl;
     cout << "initY: " << initY << endl;
+    return; // TODO: for now
 
     // image of pixel values
     const int HEIGHT = nff.v_resolution[1];

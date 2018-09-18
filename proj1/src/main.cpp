@@ -7,9 +7,13 @@ using Eigen::Vector3d;
 using namespace std;
 
 void tests(SettingsNFF nff);
+void testTriangles();
 
 // my driver
 int main(int argc, char *argv[]) {
+    //testTriangles();
+    //return 0;
+
     if (argc != 2) {
         std::cout << "expected 1 arg" << endl;
         exit(1);
@@ -26,10 +30,10 @@ int main(int argc, char *argv[]) {
     RayTracer rayT = RayTracer(nff);
 
     // test my code
-    tests(nff);
+    //tests(nff);
 
 
-    //rayT.render("out.ppm");
+    rayT.render("out.ppm");
 
     return 0;
 }
@@ -81,3 +85,38 @@ void tests(SettingsNFF nff) {
     res = poly2.intersect(r);
     cout << "res = " << res << endl;
 }
+
+void testTriangles() {
+    cout << "TESTING Triangle class:" << endl;
+    Triangle tri = Triangle(Vector3d(0,0,5), Vector3d(4,0,5), Vector3d(5,2,5));
+    Ray ray = Ray(Vector3d(2,0,0), Vector3d(0,0,5));
+    double vals[] = {-1,-1,-1, -1};
+
+    // shoot ray at first vertex (from origin)
+    ray = Ray(Vector3d(0,0,0), Vector3d(0,0,5));
+    tri.intersectValues(ray, vals);
+    double expd = (ray.eye - ray.dir).norm();   // expected
+    cout << "\texpd = " << expd << endl;
+    assert(vals[3] == expd);
+    cout << "test1 passed" << endl;
+
+    // shoot ray at second vertex (from origin)
+    ray = Ray(Vector3d(0,0,0), Vector3d(4,0,5));
+    tri.intersectValues(ray, vals);
+    expd = (ray.eye - ray.dir).norm();   // expected
+    cout << "\texpd = " << expd << endl;
+    assert(vals[3] == expd);
+    cout << "test2 passed" << endl;
+
+
+    // fails when we don't shoot from the origin:::
+
+    // shoot ray at second vertex (from (2,0,0))
+    ray = Ray(Vector3d(2,0,0), Vector3d(4,0,5));
+    tri.intersectValues(ray, vals);
+    expd = (ray.eye - ray.dir).norm();   // expected
+    cout << "\texpd = " << expd << endl;
+    assert(vals[3] == expd);
+    cout << "test3 passed" << endl;
+}
+
