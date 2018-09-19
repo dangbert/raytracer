@@ -9,67 +9,52 @@ RayTracer::RayTracer(SettingsNFF nff) {
 }
 
 /**
+ * renders the nff file for this object and writes the image to a file
+ * filename:  name for output file (should end in .ppm)
+ * debug:     whether or not to print out debug info for the render proces
  *
  * for this project, FOV is the whole image
  *   (including the edge of pixels on each side rather than their centers)
  *   and pixels are square
- *
- * filename: name for output file (should end in .ppm)
  */
 void RayTracer::render(std::string filename, bool debug) {
-    cout << "\nrendering" << endl;
+    /*
+     * NOTE:
+     * world coordinates:  3D coordinate system (camera focal point at origin)
+     * camera coordinates: 3D coordinate system where:
+     *                     center of image is origin, image plane is on z=0
+     * image coordinates:  (i,j) discrete location of pixel in image
+     */
+    cout << "\nrendering..." << endl;
+    if (debug) {
+        cout << this->nff << endl;
+    }
+    // vectors defining our world coordinates (origin is at nff.v_from)
+    Vector3d w = (nff.v_from - nff.v_at).normalized();
+    Vector3d u = nff.v_up.cross(w).normalized();
+    Vector3d v = w.cross(u).normalized();
 
-    // TODO: store these as Ray objects?
-    Eigen::Vector3d w = (nff.v_from - nff.v_at).normalized();
-    Eigen::Vector3d u = nff.v_up.cross(w).normalized();
-    Eigen::Vector3d v = w.cross(u).normalized();
-
-
+    // distance from origin to center of virtual image plane
     double d = (nff.v_at - nff.v_from).norm();
-    // deltaX = real world width / pixel width
-    cout << "d = " << d << endl;
-    double deltaX = (d * tan(nff.v_angle/2 * M_PI/180)) / (nff.v_resolution[0]/2);
+    // width (and height) of a pixel on the virtual image plane
+    //     deltaX = real world width of plane / x resolution
+    double deltaX = 2 * (d * tan(nff.v_angle/2 * M_PI/180)) / nff.v_resolution[0];
 
-    // TODO: my w,u,v, deltaX are correct
-    //       but initX, initY are wrong
-    //       teacher values:
-    //          left limit: -1.69647
-    //          top limit: 1.69647
-    //       mine are both:
-    //          initX: -1.70057
+    // position (in camera coordinates) of CENTER of top left corner pixel
+    // locations are offset from the center of the image (0,0,0) (in camera coordinates)
+    //                 deltaX * (num pixels to move)
+    double initX = 0 - deltaX * ((double) nff.v_resolution[0]/2 - (double) 1/2);
+    double initY = 0 + deltaX * ((double) nff.v_resolution[1]/2 - (double) 1/2);
 
-
-    //deltaX = 1.0;
-    Vector3d v_at = nff.v_at;
-    Eigen::Vector2i v_resolution = nff.v_resolution;
-    //v_resolution[0] = 8;
-    //v_resolution[1] = 9;
-    //v_at[0] = 20;
-    //v_at[1] = 20.5;
-
-    // position of CENTER of top left corner pixel (real world coordinates)
-    //                       deltaX * (numPixels to move)
-    //double initX = v_at[0] - deltaX * ((double) v_resolution[0]/2 + (double) 1/2);
-    cout << "resolution is " << v_resolution[0] << "x" << v_resolution[1] << endl;
-    double numPixelsX = ((double) v_resolution[0]/2 - (double) 1/2);
-    double initX = v_at[0] - deltaX * numPixelsX;
-
-    double numPixelsY = ((double) v_resolution[1]/2 - (double) 1/2);
-    double initY = v_at[1] + deltaX * numPixelsY;
-
-    cout << "numPixelsX = " << numPixelsX << endl;
-    cout << "numPixelsY = " << numPixelsY << endl;
-
-    //double initX = nff.v_at[0] - deltaX * ((double) nff.v_resolution[0]/2) + deltaX/2;
-    //double initY = nff.v_at[1] - deltaX * ((double) nff.v_resolution[1]/2) + deltaX/2;
-
-    cout << "w: " << w << endl;
-    cout << "u: " << u << endl;
-    cout << "v: " << v << endl;
-    cout << "d: " << d << endl;
-    cout << "deltaX: " << deltaX << endl;
-    cout << "initX: " << initX << endl;
-    cout << "initY: " << initY << endl;
+    if (debug) {
+        printf("w: (%g, %g, %g)\n", w[0], w[1], w[2]);
+        printf("u: (%g, %g, %g)\n", u[0], u[1], u[2]);
+        printf("v: (%g, %g, %g)\n", v[0], v[1], v[2]);
+        cout << "d: " << d << endl;
+        cout << "deltaX: " << deltaX << endl;
+        cout << "initX: " << initX << endl;
+        cout << "initY: " << initY << endl << endl;
+    }
 
     // image of pixel values
     const int HEIGHT = nff.v_resolution[1];
@@ -77,72 +62,65 @@ void RayTracer::render(std::string filename, bool debug) {
     // allocate contiguous bytes for storing pixel color values
     unsigned char* pixels = new unsigned char[HEIGHT*WIDTH*3];
 
-    // iterate over all pixels in the image (0,0) is the top left corner pixel
-    // TODO: create array/matrix of pixel colors
-    // TODO: swap i and j here?
+    // iterate over all pixels in the image ((0,0) is the top left corner pixel)
     for (int i=0; i<WIDTH; i++) {      // iterate over columns
         for (int j=0; j<HEIGHT; j++) { // iterate over rows
-            // camera coordinates
+            // (i,j) is the current pixel (in image coordinates)
+            // center of this pixel (in camera coordinates)
             double x = initX + deltaX*i;
             double y = initY - deltaX*j;
             double z = -(nff.v_from - nff.v_at).norm();
-            // position of center of pixel (i,j) in world space (where u,v,w define the axies)
-            Eigen::Vector3d pos = x*u + y*v + z*w + nff.v_from;
+            // transform (center of this pixel) camera coordinates -> world coordinates
+            Vector3d pos = x*u + y*v + z*w + nff.v_from;
 
-            if (i%5 == 0 && (j == 0 || j == 128 || j == 511)) {
-                // for debugging
+            if (debug && i%5 == 0 && (j == 0 || j == 128 || j == 511)) {
                 printf("(%d,%d) -> (%f, %f, %f)\n", i, j, pos[0], pos[1], pos[2]);
             }
             // construct ray from camera through center of pixel
             Ray ray = Ray(nff.v_from, pos-nff.v_from);
             // get the color for this pixel
             Vector3d color = trace(ray);
-            //std::cout << "final color: " << color[0] << "," << color[1] << "," << color[2] << endl;
             // set color of pixel
             for (int k=0; k<3; k++) {
                 pixels[j*(WIDTH*3) + (i*3) + k] = color[k] * 255;
             }
         }
     }
+
     // write image to file
     FILE *f = fopen(filename.c_str(), "wb");
     fprintf(f, "P6\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
     fwrite(pixels, 1, HEIGHT*WIDTH*3, f);
     fclose(f);
     delete[] pixels;
+    cout << "image written to " << filename << endl;
 }
 
 /**
  * return the color of the first object hit by this ray
- * returns the background color if no object is hit
+ * (returns the background color if no object is hit)
  */
-Eigen::Vector3d RayTracer::trace(Ray ray, bool debug) {
-    //std::cout << "in trace, size = " << nff.polygons.size() << endl;
-    // TODO: finish this
-    //std::vector< std::vector<Eigen::Vector3d> > polygons;
-    // iterate over polygons
-
-    int closest = -1;  // index of closest polygon intersected
+Vector3d RayTracer::trace(Ray ray, bool debug) {
+    // TODO: use hither
+    int closest = -1;  // index of closest polygon intersected by this ray
     int dist = -1;     // distance (along the ray) to the intersection point
     for (unsigned int i=0; i<nff.polygons.size(); i++) {
         int res;
-        if (debug)
-            res = nff.polygons[i].intersect(ray, debug);
-        else
-            res = nff.polygons[i].intersect(ray);
+        res = nff.polygons[i].intersect(ray, debug);
 
         if (res != -1 && (dist == -1 || res < dist)) {
+            // we had our first intersection, or found a closer intersection
             closest = i;
             dist = res;
         }
     }
-    if (dist == -1) {
-        // nothing was hit by the ray
-        return nff.b_color;
-    }
-    else {
-        // object was hit by the ray
+
+    if (dist != -1) {
+        // ray intersected with an object
         // TODO: store a unique color corresponding to each polygon (in it's class?)
         return nff.f_rgb;
+    }
+    else {
+        return nff.b_color;
     }
 }

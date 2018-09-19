@@ -1,5 +1,6 @@
 #include "Triangle.h"
 #include <iostream>
+using Eigen::Vector3d;
 using std::cout;
 using std::endl;
 

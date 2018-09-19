@@ -4,6 +4,7 @@
 #include <vector>
 #include "Ray.h"
 #include "Triangle.h"
+using Eigen::Vector3d;
 /* File: Polygon.h
  *  Implements a class to represent a polygon in 3D space
  *  Dan Engbert - UMBC CMSC435 F18 Project 1

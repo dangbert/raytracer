@@ -1,11 +1,12 @@
 #include "Polygon.h"
 #include <iostream>
+using Eigen::Vector3d;
 
-Polygon::Polygon(std::vector<Eigen::Vector3d> vertices) {
+Polygon::Polygon(std::vector<Vector3d> vertices) {
     setVertices(vertices);
 }
 
-void Polygon::setVertices(std::vector<Eigen::Vector3d> vertices) {
+void Polygon::setVertices(std::vector<Vector3d> vertices) {
     // TODO: if vertices.size < 3, throw error
     this->vertices = vertices;
     // create triangle fan

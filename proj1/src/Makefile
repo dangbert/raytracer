@@ -24,8 +24,4 @@ clean:
 
 .PHONY: run
 run:
-	make -B && test
-
-.PHONY: test
-test:
 	make && ./$(NAME) ../rotated-tetra-3.nff
