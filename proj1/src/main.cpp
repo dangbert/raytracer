@@ -86,7 +86,12 @@ void tests(SettingsNFF nff) {
     cout << "res = " << res << endl;
 }
 
+/*
+ * test that Triangle::intersectValues() works
+ */
 void testTriangles() {
+    int count = 0; // number of tests performed so far
+    bool debug = false;
     cout << "TESTING Triangle class:" << endl;
     Triangle tri = Triangle(Vector3d(0,0,5), Vector3d(4,0,5), Vector3d(5,2,5));
     Ray ray = Ray(Vector3d(2,0,0), Vector3d(0,0,5));
@@ -94,29 +99,59 @@ void testTriangles() {
 
     // shoot ray at first vertex (from origin)
     ray = Ray(Vector3d(0,0,0), Vector3d(0,0,5));
-    tri.intersectValues(ray, vals);
+    tri.intersectValues(ray, vals, debug);
     double expd = (ray.eye - ray.dir).norm();   // expected
     cout << "\texpd = " << expd << endl;
     assert(vals[3] == expd);
-    cout << "test1 passed" << endl;
+    cout << "test" << ++count << " passed" << endl;
 
-    // shoot ray at second vertex (from origin)
+    // hit second vertex with ray
     ray = Ray(Vector3d(0,0,0), Vector3d(4,0,5));
-    tri.intersectValues(ray, vals);
+    tri.intersectValues(ray, vals, debug);
     expd = (ray.eye - ray.dir).norm();   // expected
     cout << "\texpd = " << expd << endl;
     assert(vals[3] == expd);
-    cout << "test2 passed" << endl;
+    cout << "test" << ++count << " passed" << endl;
 
-
-    // fails when we don't shoot from the origin:::
-
-    // shoot ray at second vertex (from (2,0,0))
-    ray = Ray(Vector3d(2,0,0), Vector3d(4,0,5));
-    tri.intersectValues(ray, vals);
+    // hit the third vertex (from origin)
+    ray = Ray(Vector3d(0,0,0), Vector3d(5,2,5));
+    tri.intersectValues(ray, vals, debug);
     expd = (ray.eye - ray.dir).norm();   // expected
     cout << "\texpd = " << expd << endl;
     assert(vals[3] == expd);
-    cout << "test3 passed" << endl;
+    cout << "test" << ++count << " passed" << endl;
+
+    // shoot ray at third vertex (from opposite side of origin)
+    ray = Ray(Vector3d(-5,-2,-5), Vector3d(5,2,5));
+    tri.intersectValues(ray, vals, debug);
+    expd = (ray.eye - ray.dir).norm();   // expected
+    cout << "\texpd = " << expd << endl;
+    assert(vals[3] == expd);
+    cout << "test" << ++count << " passed" << endl;
+
+    // hit a point along bottom edge of triangle
+    // this ray will pass through (2,0,5) just like a ray from (0,0,0) would
+    ray = Ray(Vector3d(-2,0,-5), Vector3d(2,0,5));
+    tri.intersectValues(ray, vals, debug);
+    expd = (ray.eye - ray.dir).norm();   // expected
+    cout << "\texpd = " << expd << endl;
+    assert(vals[3] == expd);
+    cout << "test" << ++count << " passed" << endl;
+
+    // hit a point along top edge of triangle (from origin)
+    ray = Ray(Vector3d(0,0,0), Vector3d(1, (double) 2/5, 5));
+    tri.intersectValues(ray, vals, debug);
+    expd = (ray.eye - ray.dir).norm();   // expected
+    cout << "\texpd = " << expd << endl;
+    assert(vals[3] == expd);
+    cout << "test" << ++count << " passed" << endl;
+
+    // hit a point in the middle of the triangle
+    ray = Ray(Vector3d(0,0,0), Vector3d(4, 1, 5));
+    tri.intersectValues(ray, vals, debug);
+    expd = (ray.eye - ray.dir).norm();   // expected
+    cout << "\texpd = " << expd << endl;
+    assert(vals[3] == expd);
+    cout << "test" << ++count << " passed" << endl;
 }
 

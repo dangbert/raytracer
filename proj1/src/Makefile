@@ -26,5 +26,6 @@ clean:
 run:
 	make -B && test
 
+.PHONY: test
 test:
-	./$(NAME) ../teacher_tetra-3.nff
+	make && ./$(NAME) ../rotated-tetra-3.nff

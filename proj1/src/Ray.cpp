@@ -4,9 +4,11 @@
 /*
  * constructs a Ray object
  *
- * a ray starts at a give 3D point (eye)
- * and moves out from that point in a straight line parallel to
- * the vector dir
+ * a ray starts at a give 3D point (eye) and moves out
+ * from that point in a straight line parallel to the vector dir
+ *
+ * NOTE: a ray does NOT go from the point eye to the point dir
+ *       dir is a direction, not a point!
  */
 Ray::Ray(Eigen::Vector3d eye, Eigen::Vector3d dir) {
     this->eye = eye;

@@ -12,10 +12,10 @@
 class RayTracer {
     public:
         RayTracer(SettingsNFF nff);
-        void render(std::string filename);
+        void render(std::string filename, bool debug=false);
 
     private:
         SettingsNFF nff;
-        Eigen::Vector3d trace(Ray ray);
+        Eigen::Vector3d trace(Ray ray, bool debug=false);
 };
 #endif

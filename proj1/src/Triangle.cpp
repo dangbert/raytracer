@@ -13,9 +13,9 @@ Triangle::Triangle(Eigen::Vector3d p1, Eigen::Vector3d p2, Eigen::Vector3d p3) {
  * returns distance along ray at which it intersects this triangle
  * (-1 if no intersection)
  */
-double Triangle::intersect(Ray ray) const {
+double Triangle::intersect(Ray ray, bool debug) const {
     double vals[4];
-    intersectValues(ray, vals); // [B, g, t, dist]
+    intersectValues(ray, vals, debug); // [B, g, t, dist]
     return vals[3];
 }
 
@@ -28,8 +28,7 @@ double Triangle::intersect(Ray ray) const {
  *   and the distance (dist) along the ray at which the interesection occurs
  *   (-1 if no intersection)
  */
-void Triangle::intersectValues(Ray ray, double vals[]) const {
-    bool debug = false;
+void Triangle::intersectValues(Ray ray, double vals[], bool debug) const {
     // ray: e + td
     // triangle a + B(b-a) + g(c-a)
     // solve system: Ax=b

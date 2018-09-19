@@ -11,8 +11,8 @@ using Eigen::Vector3d;
 class Triangle {
     public:
         Triangle(Vector3d p1, Vector3d p2, Vector3d p3);
-        double intersect(Ray ray) const;
-        void intersectValues(Ray ray, double vals[]) const;
+        double intersect(Ray ray, bool debug=false) const;
+        void intersectValues(Ray ray, double vals[], bool debug=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Triangle &tri);
 
         // vertices of triangle in 3D space
