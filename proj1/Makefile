@@ -6,7 +6,7 @@ CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors -O2
 NAME = proj1
 OBJS = main.o RayTracer.o SettingsNFF.o Ray.o Polygon.o Triangle.o
 DEPS = *.h
-INCLUDE = -I../../common
+INCLUDE = -I../common -I/usr/include/eigen3/
 
 
 # build target executable
@@ -20,7 +20,7 @@ $(NAME): $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o $(NAME)
+	rm -f *.o $(NAME) out.ppm
 
 .PHONY: run
 run:
