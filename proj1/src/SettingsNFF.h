@@ -29,7 +29,7 @@ class SettingsNFF {
         double v_angle;
         // distance of plane in front of camera for which things closer to the camera
         // wont' be rendered:
-        double v_hither;
+        double v_hither;                 // don't render things closer than this distance away
         Eigen::Vector2i v_resolution;    // x resolution, y resolution
         Eigen::Vector3d f_rgb;           // fill color
         std::vector<Polygon> polygons;   // polygons in scene

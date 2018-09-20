@@ -1,7 +1,15 @@
 #include "Polygon.h"
 #include <iostream>
 using Eigen::Vector3d;
+using std::cout;
+using std::endl;
 
+/**
+ * constuct a polygon object
+ * for now this class only works for convex polygons
+ *
+ * vertices: vector of vertices (Vector3d objects) for this polygon
+ */
 Polygon::Polygon(std::vector<Vector3d> vertices) {
     setVertices(vertices);
 }
@@ -18,18 +26,29 @@ void Polygon::setVertices(std::vector<Vector3d> vertices) {
 /**
  * returns distance along ray at which it intersects this polygon
  * (-1 if no intersection)
- * for now only works for convex polygons
- * debug: whether or not to print out debug info for this intersection check
+ *
+ * ray:     the ray to check for intersection with
+ * hither:  ignore intersections that are closer than hither (-1 to disable)
+ * debug:   whether or not to print out debug info for this intersection check
  */
-double Polygon::intersect(Ray ray, bool debug) const {
+double Polygon::intersect(Ray ray, double hither, bool debug) const {
     // TODO: use hither
     // distance along ray of closest triangle (-1 if none intersect)
-    int dist = -1;
+    double dist = -1;
     for (unsigned int i=0; i<triangles.size(); i++) {
-        int res = triangles[i].intersect(ray, debug);
+        // actual distance (along ray) of intersection point
+        double res = triangles[i].intersect(ray, debug);
 
-        if ((dist == -1) || (res != -1 && res < dist)) {
+        if (res != -1 && (dist == -1 || res < dist)) {
             // we hit a triangle for the first time, or a closer triangle
+            if (hither != -1 && res  < hither) {
+                // don't count as intersection if it's closer than hither
+                if (debug) {
+                    cout << "\t(skipping result: " << res << " due to hither: " << hither << ")" << endl;
+                }
+                continue;
+            }
+
             dist = res;
         }
     }

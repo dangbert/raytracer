@@ -13,6 +13,7 @@ class RayTracer {
     public:
         RayTracer(SettingsNFF nff);
         void render(std::string filename, bool debug=false);
+        void animate(std::string filename, bool debug=false);
 
     private:
         SettingsNFF nff;

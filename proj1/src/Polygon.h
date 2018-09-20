@@ -13,7 +13,7 @@ using Eigen::Vector3d;
 class Polygon {
     public:
         Polygon(std::vector<Eigen::Vector3d> vertices);
-        double intersect(Ray ray, bool debug=false) const;
+        double intersect(Ray ray, double hither=-1, bool debug=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Polygon &poly);
         std::vector<Triangle> getTriangles() const;
         void printTriangles() const;

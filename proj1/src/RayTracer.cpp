@@ -9,6 +9,64 @@ RayTracer::RayTracer(SettingsNFF nff) {
 }
 
 /**
+ * for fun
+ */
+void RayTracer::animate(std::string filename, bool debug) {
+    int count = 0;
+    /*
+    for (double h=0; h<10; h+=0.1) {
+        std::string tmp = "";
+        std::stringstream ss;
+        ss << filename << count << ".ppm";
+        ss >> tmp;
+
+        this->nff.v_hither = h;
+        render(tmp, debug);
+        count++;
+    }
+    */
+    Vector3d w = (nff.v_from - nff.v_at).normalized();
+    Vector3d u = nff.v_up.cross(w).normalized();
+    Vector3d v = w.cross(u).normalized();
+
+    Vector3d start = this->nff.v_from;
+    for (double a=0; a<100; a+=1) {
+        double angle = (2*M_PI) * (a/100);
+        std::string tmp = "";
+        std::stringstream ss;
+        ss << filename << count << ".ppm";
+        ss >> tmp;
+
+        Vector3d axis = v;
+        Vector3d c = this->nff.v_at; // center of rotation
+
+        Vector3d point = start;
+        Eigen::Affine3d A = Eigen::Translation3d(c) * Eigen::AngleAxisd(angle, axis) * Eigen::Translation3d(-c);
+        //Eigen::Vector4d point4 = point.conservativeResize(4);
+        //point4(3)=1;
+        Eigen::Vector4d point4;
+        point4[0] = point[0];
+        point4[1] = point[1];
+        point4[2] = point[2];
+        point4[3] = 1;
+        point4=(A.matrix() * point4);
+        //point = point4.conservativeResize(3);
+
+        point[0] = point4[0] / point4[3];
+        point[1] = point4[1] / point4[3];
+        point[2] = point4[2] / point4[3];
+
+
+        this->nff.v_from = point;
+        //this->nff._from = Eigen::AngleAxis<float> aa(angle, this->nff.v_from);
+
+        // create frame
+        render(tmp, debug);
+        count++;
+    }
+}
+
+/**
  * renders the nff file for this object and writes the image to a file
  * filename:  name for output file (should end in .ppm)
  * debug:     whether or not to print out debug info for the render proces
@@ -20,11 +78,13 @@ RayTracer::RayTracer(SettingsNFF nff) {
 void RayTracer::render(std::string filename, bool debug) {
     /*
      * NOTE:
-     * world coordinates:  3D coordinate system (camera focal point at origin)
+     * world coordinates:  3D coordinate system (which polygons are defined in respect to)
      * camera coordinates: 3D coordinate system where:
-     *                     center of image is origin, image plane is on z=0
+     *                     origin is the focal point (v_from)
+     *                     center of virtual image plane is (0,0,d)
      * image coordinates:  (i,j) discrete location of pixel in image
      */
+
     cout << "\nrendering..." << endl;
     if (debug) {
         cout << this->nff << endl;
@@ -33,6 +93,9 @@ void RayTracer::render(std::string filename, bool debug) {
     Vector3d w = (nff.v_from - nff.v_at).normalized();
     Vector3d u = nff.v_up.cross(w).normalized();
     Vector3d v = w.cross(u).normalized();
+    //w = Vector3d(0,0,-1);
+    //u = Vector3d(1,0,0);
+    //v = Vector3d(0,1,0);
 
     // distance from origin to center of virtual image plane
     double d = (nff.v_at - nff.v_from).norm();
@@ -63,8 +126,8 @@ void RayTracer::render(std::string filename, bool debug) {
     unsigned char* pixels = new unsigned char[HEIGHT*WIDTH*3];
 
     // iterate over all pixels in the image ((0,0) is the top left corner pixel)
-    for (int i=0; i<WIDTH; i++) {      // iterate over columns
-        for (int j=0; j<HEIGHT; j++) { // iterate over rows
+    for (int j=0; j<HEIGHT; j++) {      // iterate over rows
+        for (int i=0; i<WIDTH; i++) {   // iterate over columns
             // (i,j) is the current pixel (in image coordinates)
             // center of this pixel (in camera coordinates)
             double x = initX + deltaX*i;
@@ -73,9 +136,6 @@ void RayTracer::render(std::string filename, bool debug) {
             // transform (center of this pixel) camera coordinates -> world coordinates
             Vector3d pos = x*u + y*v + z*w + nff.v_from;
 
-            if (debug && i%5 == 0 && (j == 0 || j == 128 || j == 511)) {
-                printf("(%d,%d) -> (%f, %f, %f)\n", i, j, pos[0], pos[1], pos[2]);
-            }
             // construct ray from camera through center of pixel
             Ray ray = Ray(nff.v_from, pos-nff.v_from);
             // get the color for this pixel
@@ -101,12 +161,10 @@ void RayTracer::render(std::string filename, bool debug) {
  * (returns the background color if no object is hit)
  */
 Vector3d RayTracer::trace(Ray ray, bool debug) {
-    // TODO: use hither
     int closest = -1;  // index of closest polygon intersected by this ray
     int dist = -1;     // distance (along the ray) to the intersection point
     for (unsigned int i=0; i<nff.polygons.size(); i++) {
-        int res;
-        res = nff.polygons[i].intersect(ray, debug);
+        int res = nff.polygons[i].intersect(ray, nff.v_hither, debug);
 
         if (res != -1 && (dist == -1 || res < dist)) {
             // we had our first intersection, or found a closer intersection

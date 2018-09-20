@@ -21,7 +21,7 @@ void SettingsNFF::reset() {
     v_at = Eigen::Vector3d(0,0,0);
     v_up = Eigen::Vector3d(0,0,0);
     v_angle = 0;
-    v_hither = 0;
+    v_hither = -1;  // -1 indicates that hither isn't set
     v_resolution = Eigen::Vector2i(0,0);
     f_rgb = Eigen::Vector3d(0,0,0);
 }
