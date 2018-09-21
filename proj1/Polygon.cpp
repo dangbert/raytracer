@@ -35,7 +35,6 @@ void Polygon::setVertices(std::vector<Vector3d> vertices) {
  * debug:   whether or not to print out debug info for this intersection check
  */
 double Polygon::intersect(Ray ray, double hither, bool debug) const {
-    // TODO: use hither
     // distance along ray of closest triangle (-1 if none intersect)
     double dist = -1;
     for (unsigned int i=0; i<triangles.size(); i++) {
