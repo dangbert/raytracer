@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include "SettingsNFF.h"
 #include "Ray.h"
+#include "Surface.h"
 #include "Polygon.h"
 #include "Triangle.h"
 /* File: RayTracer.h

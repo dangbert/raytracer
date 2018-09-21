@@ -9,7 +9,9 @@
 #include <fstream>
 #include <vector>
 #include <Eigen/Dense>
+#include "Surface.h"
 #include "Polygon.h"
+#include "Sphere.h"
 
 using Eigen::Vector3d;
 
@@ -33,6 +35,6 @@ class SettingsNFF {
         // wont' be rendered:
         double v_hither;                 // don't render things closer than this distance away
         Eigen::Vector2i v_resolution;    // x resolution, y resolution
-        std::vector<Polygon> polygons;   // polygons in scene
+        std::vector<Surface*> surfaces;   // list of objects in scene
 };
 #endif

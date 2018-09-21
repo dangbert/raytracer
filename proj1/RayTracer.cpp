@@ -20,7 +20,7 @@ RayTracer::RayTracer(SettingsNFF nff) {
 void RayTracer::render(std::string filename, bool debug) {
     /*
      * NOTE:
-     * world coordinates:  3D coordinate system (which polygons are defined in respect to)
+     * world coordinates:  3D coordinate system (which surfaces are defined in respect to)
      * camera coordinates: 3D coordinate system where:
      *                     origin is the focal point (v_from)
      *                     center of virtual image plane is (0,0,d)
@@ -108,8 +108,8 @@ void RayTracer::render(std::string filename, bool debug) {
 Vector3d RayTracer::trace(Ray ray, bool debug) {
     int closest = -1;  // index of closest polygon intersected by this ray
     int dist = -1;     // distance (along the ray) to the intersection point
-    for (unsigned int i=0; i<nff.polygons.size(); i++) {
-        int res = nff.polygons[i].intersect(ray, nff.v_hither, debug);
+    for (unsigned int i=0; i<nff.surfaces.size(); i++) {
+        int res = nff.surfaces[i]->intersect(ray, nff.v_hither, debug);
 
         if (res != -1 && (dist == -1 || res < dist)) {
             // we had our first intersection, or found a closer intersection
@@ -120,7 +120,7 @@ Vector3d RayTracer::trace(Ray ray, bool debug) {
 
     if (dist != -1) {
         // ray intersected with an object
-        return nff.polygons[closest].color;
+        return nff.surfaces[closest]->color;
     }
     else {
         return nff.b_color;

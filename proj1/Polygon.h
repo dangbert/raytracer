@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include "Ray.h"
+#include "Surface.h"
 #include "Triangle.h"
 using Eigen::Vector3d;
 /* File: Polygon.h
@@ -10,7 +11,7 @@ using Eigen::Vector3d;
  *  Dan Engbert - UMBC CMSC435 F18 Project 1
 */
 
-class Polygon {
+class Polygon : public Surface {
     public:
         Polygon(std::vector<Vector3d> vertices, Vector3d color=Vector3d(0,0,0));
         double intersect(Ray ray, double hither=-1, bool debug=false) const;
@@ -19,11 +20,9 @@ class Polygon {
         void printTriangles() const;
 
      private:
-        friend class RayTracer;
         void setVertices(std::vector<Vector3d> vertices);
 
         std::vector<Vector3d> vertices;  // vertices of triangle in 3D space
         std::vector<Triangle> triangles; // triangle fan for this polygon
-        Vector3d color;                  // color of this polygon (default: black)
 };
 #endif

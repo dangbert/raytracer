@@ -12,9 +12,10 @@ using std::endl;
  * color:    the color of this polygon (1,1,1) for white
  *           (defaults to black (0,0,0))
  */
-Polygon::Polygon(std::vector<Vector3d> vertices, Vector3d color) {
-    setVertices(vertices);
+Polygon::Polygon(std::vector<Vector3d> vertices, Vector3d color)
+{
     this->color = color;
+    setVertices(vertices);
 }
 
 void Polygon::setVertices(std::vector<Vector3d> vertices) {
@@ -76,7 +77,9 @@ void Polygon::printTriangles() const {
     }
 }
 
-// print out this object for debugging
+/**
+ * print out this object for debugging
+ */
 std::ostream& operator<<(std::ostream &sout, const Polygon &poly) {
     sout << "Polygon (" << poly.vertices.size() << " vertices):" << std::endl;
     for (unsigned int i = 0; i != poly.vertices.size(); i++) {

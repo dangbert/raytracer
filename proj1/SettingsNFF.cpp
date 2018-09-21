@@ -68,6 +68,15 @@ int SettingsNFF::readFile(std::string fname) {
             // f %g %g %g %g %g %g %g %g
             if (!(iss >> tmp >> curColor[0] >> curColor[1] >> curColor[2])) { return 1; }
         }
+        else if (tokens.at(0) == "s") {
+            // "s" center.x center.y center.z radius
+            // s %g %g %g %g
+            mode = "f";
+            Vector3d center;
+            double radius;
+            if (!(iss >> tmp >> center[0] >> center[1] >> center[2] >> radius)) { return 1; }
+            surfaces.push_back(new Sphere(center, radius, curColor));
+        }
         else if (tokens.at(0) == "p" || mode == "p") {
             // "p" total_vertices
             // vert1.x vert1.y vert1.z
@@ -86,7 +95,7 @@ int SettingsNFF::readFile(std::string fname) {
             if (--p_remaining == 0) {
                 mode = ""; // "p" mode is over
                 // create Polygon object using these vertices and the current fill color
-                polygons.push_back(Polygon(cur_vertices, curColor));
+                surfaces.push_back(new Polygon(cur_vertices, curColor));
                 cur_vertices.clear();
             }
         }
@@ -149,7 +158,7 @@ std::ostream& operator<<(std::ostream &sout, const SettingsNFF &nff) {
     // TODO: consider doing above prints like this as well rather than using a helper function
     sout << "v_resolution: " << nff.v_resolution[0] << " " << nff.v_resolution[1] << endl;
 
-    sout << nff.polygons.size() << " polygons total" << endl;
+    sout << nff.surfaces.size() << " surfaces total" << endl;
     /*
     sout << endl;
     for (std::vector<Polygon>::size_type i = 0; i != nff.polygons.size(); i++) {
