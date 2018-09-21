@@ -24,4 +24,4 @@ clean:
 
 .PHONY: run
 run:
-	make && ./$(NAME) ../rotated-tetra-3.nff
+	make && ./$(NAME) inputs/rotated-tetra-3.nff

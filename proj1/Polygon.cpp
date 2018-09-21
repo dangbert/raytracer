@@ -9,9 +9,12 @@ using std::endl;
  * for now this class only works for convex polygons
  *
  * vertices: vector of vertices (Vector3d objects) for this polygon
+ * color:    the color of this polygon (1,1,1) for white
+ *           (defaults to black (0,0,0))
  */
-Polygon::Polygon(std::vector<Vector3d> vertices) {
+Polygon::Polygon(std::vector<Vector3d> vertices, Vector3d color) {
     setVertices(vertices);
+    this->color = color;
 }
 
 void Polygon::setVertices(std::vector<Vector3d> vertices) {

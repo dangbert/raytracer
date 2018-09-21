@@ -9,64 +9,6 @@ RayTracer::RayTracer(SettingsNFF nff) {
 }
 
 /**
- * for fun
- */
-void RayTracer::animate(std::string filename, bool debug) {
-    int count = 0;
-    /*
-    for (double h=0; h<10; h+=0.1) {
-        std::string tmp = "";
-        std::stringstream ss;
-        ss << filename << count << ".ppm";
-        ss >> tmp;
-
-        this->nff.v_hither = h;
-        render(tmp, debug);
-        count++;
-    }
-    */
-    Vector3d w = (nff.v_from - nff.v_at).normalized();
-    Vector3d u = nff.v_up.cross(w).normalized();
-    Vector3d v = w.cross(u).normalized();
-
-    Vector3d start = this->nff.v_from;
-    for (double a=0; a<100; a+=1) {
-        double angle = (2*M_PI) * (a/100);
-        std::string tmp = "";
-        std::stringstream ss;
-        ss << filename << count << ".ppm";
-        ss >> tmp;
-
-        Vector3d axis = v;
-        Vector3d c = this->nff.v_at; // center of rotation
-
-        Vector3d point = start;
-        Eigen::Affine3d A = Eigen::Translation3d(c) * Eigen::AngleAxisd(angle, axis) * Eigen::Translation3d(-c);
-        //Eigen::Vector4d point4 = point.conservativeResize(4);
-        //point4(3)=1;
-        Eigen::Vector4d point4;
-        point4[0] = point[0];
-        point4[1] = point[1];
-        point4[2] = point[2];
-        point4[3] = 1;
-        point4=(A.matrix() * point4);
-        //point = point4.conservativeResize(3);
-
-        point[0] = point4[0] / point4[3];
-        point[1] = point4[1] / point4[3];
-        point[2] = point4[2] / point4[3];
-
-
-        this->nff.v_from = point;
-        //this->nff._from = Eigen::AngleAxis<float> aa(angle, this->nff.v_from);
-
-        // create frame
-        render(tmp, debug);
-        count++;
-    }
-}
-
-/**
  * renders the nff file for this object and writes the image to a file
  * filename:  name for output file (should end in .ppm)
  * debug:     whether or not to print out debug info for the render proces
@@ -87,7 +29,7 @@ void RayTracer::render(std::string filename, bool debug) {
 
     cout << "\nrendering..." << endl;
     if (debug) {
-        cout << this->nff << endl;
+        cout << nff << endl;
     }
     // vectors defining our world coordinates (origin is at nff.v_from)
     Vector3d w = (nff.v_from - nff.v_at).normalized();
@@ -159,6 +101,9 @@ void RayTracer::render(std::string filename, bool debug) {
 /**
  * return the color of the first object hit by this ray
  * (returns the background color if no object is hit)
+ *
+ * Ray:    the Ray being shot through the scene
+ * debug:  whether to print extra info for debugging
  */
 Vector3d RayTracer::trace(Ray ray, bool debug) {
     int closest = -1;  // index of closest polygon intersected by this ray
@@ -175,10 +120,71 @@ Vector3d RayTracer::trace(Ray ray, bool debug) {
 
     if (dist != -1) {
         // ray intersected with an object
-        // TODO: store a unique color corresponding to each polygon (in it's class?)
-        return nff.f_rgb;
+        return nff.polygons[closest].color;
     }
     else {
         return nff.b_color;
+    }
+}
+
+/**
+ * for fun
+ * output multiple frames on the scene in a moving animation
+ *
+ * filename:   first part of filename
+ *             (<number>.ppm will be appended for each frame)
+ * debug:      whether to print out extra info for debugging
+ */
+void RayTracer::animate(std::string filename, bool debug) {
+    int count = 0;
+    /*
+    for (double h=0; h<10; h+=0.1) {
+        std::string tmp = "";
+        std::stringstream ss;
+        ss << filename << count << ".ppm";
+        ss >> tmp;
+
+        nff.v_hither = h;
+        render(tmp, debug);
+        count++;
+    }
+    */
+    Vector3d w = (nff.v_from - nff.v_at).normalized();
+    Vector3d u = nff.v_up.cross(w).normalized();
+    Vector3d v = w.cross(u).normalized();
+
+    Vector3d start = nff.v_from;
+    for (double a=0; a<100; a+=1) {
+        double angle = (2*M_PI) * (a/100);
+        std::string tmp = "";
+        std::stringstream ss;
+        ss << filename << count << ".ppm";
+        ss >> tmp;
+
+        Vector3d axis = v;
+        Vector3d c = nff.v_at; // center of rotation
+
+        Vector3d point = start;
+        Eigen::Affine3d A = Eigen::Translation3d(c) * Eigen::AngleAxisd(angle, axis) * Eigen::Translation3d(-c);
+        //Eigen::Vector4d point4 = point.conservativeResize(4);
+        //point4(3)=1;
+        Eigen::Vector4d point4;
+        point4[0] = point[0];
+        point4[1] = point[1];
+        point4[2] = point[2];
+        point4[3] = 1;
+        point4=(A.matrix() * point4);
+        //point = point4.conservativeResize(3);
+
+        point[0] = point4[0] / point4[3];
+        point[1] = point4[1] / point4[3];
+        point[2] = point4[2] / point4[3];
+
+
+        nff.v_from = point;
+
+        // create frame
+        render(tmp, debug);
+        count++;
     }
 }

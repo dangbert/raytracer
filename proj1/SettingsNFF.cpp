@@ -8,6 +8,7 @@
 #include <iterator>
 #include <assert.h>
 using namespace std;
+using Eigen::Vector3d;
 
 SettingsNFF::SettingsNFF() {
     reset();
@@ -16,14 +17,13 @@ SettingsNFF::SettingsNFF() {
 // reset to default settings
 void SettingsNFF::reset() {
     // default background color is 0,0,0
-    b_color = Eigen::Vector3d(0,0,0);
-    v_from = Eigen::Vector3d(0,0,0);
-    v_at = Eigen::Vector3d(0,0,0);
-    v_up = Eigen::Vector3d(0,0,0);
+    b_color = Vector3d(0,0,0);
+    v_from = Vector3d(0,0,0);
+    v_at = Vector3d(0,0,0);
+    v_up = Vector3d(0,0,0);
     v_angle = 0;
     v_hither = -1;  // -1 indicates that hither isn't set
     v_resolution = Eigen::Vector2i(0,0);
-    f_rgb = Eigen::Vector3d(0,0,0);
 }
 
 /**
@@ -40,7 +40,8 @@ int SettingsNFF::readFile(std::string fname) {
     std::string mode = "";  // for sections with multiple lines
     int p_remaining = 0;    // number of vertices remaining (when mode == "p")
     ifstream f(fname);
-    std::vector<Eigen::Vector3d> cur_vertices;   // vertices for current polygon
+    std::vector<Vector3d> cur_vertices;    // vertices for current polygon
+    Vector3d curColor = Vector3d(0,0,0);   // most recent fill color
 
     while (std::getline(f, line)) {
         // split line on space delimeter to vector of strings
@@ -60,11 +61,12 @@ int SettingsNFF::readFile(std::string fname) {
             if (!(iss >> tmp >> b_color[0] >> b_color[1] >> b_color[2])) { return 1; } // error
         }
         // fill color and shading parameters
+        // The fill color is used to color the objects following it until a new color is assigned
         else if (tokens.at(0) == "f") {
             mode = "f";
             // "f" red green blue Kd Ks Shine T index_of_refraction
             // f %g %g %g %g %g %g %g %g
-            if (!(iss >> tmp >> f_rgb[0] >> f_rgb[1] >> f_rgb[2])) { return 1; }
+            if (!(iss >> tmp >> curColor[0] >> curColor[1] >> curColor[2])) { return 1; }
         }
         else if (tokens.at(0) == "p" || mode == "p") {
             // "p" total_vertices
@@ -77,14 +79,14 @@ int SettingsNFF::readFile(std::string fname) {
                 cur_vertices.clear();
                 continue; // advance to next line of file
             }
-            Eigen::Vector3d vert; // vertex
+            Vector3d vert; // vertex
             if (!(iss >> vert[0] >> vert[1] >> vert[2])) { return 1; }
             cur_vertices.push_back(vert);
 
             if (--p_remaining == 0) {
                 mode = ""; // "p" mode is over
-                // create Polygon object using these vertices
-                polygons.push_back(Polygon(cur_vertices));
+                // create Polygon object using these vertices and the current fill color
+                polygons.push_back(Polygon(cur_vertices, curColor));
                 cur_vertices.clear();
             }
         }
@@ -127,7 +129,7 @@ int SettingsNFF::readFile(std::string fname) {
 }
 
 // helper function for operator<<
-void SettingsNFF::printVector3d(std::ostream &sout, Eigen::Vector3d vect, std::string label) {
+void SettingsNFF::printVector3d(std::ostream &sout, Vector3d vect, std::string label) {
     sout << label << ": ";
     for (int i=0; i<3; i++) {
         sout << vect[i] << " ";
@@ -146,7 +148,6 @@ std::ostream& operator<<(std::ostream &sout, const SettingsNFF &nff) {
     sout << "v_hither: " << nff.v_hither << endl;
     // TODO: consider doing above prints like this as well rather than using a helper function
     sout << "v_resolution: " << nff.v_resolution[0] << " " << nff.v_resolution[1] << endl;
-    SettingsNFF::printVector3d(sout, nff.f_rgb, "f_rgb");
 
     sout << nff.polygons.size() << " polygons total" << endl;
     /*

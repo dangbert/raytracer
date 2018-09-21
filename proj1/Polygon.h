@@ -12,19 +12,18 @@ using Eigen::Vector3d;
 
 class Polygon {
     public:
-        Polygon(std::vector<Eigen::Vector3d> vertices);
+        Polygon(std::vector<Vector3d> vertices, Vector3d color=Vector3d(0,0,0));
         double intersect(Ray ray, double hither=-1, bool debug=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Polygon &poly);
         std::vector<Triangle> getTriangles() const;
         void printTriangles() const;
 
      private:
-        void setVertices(std::vector<Eigen::Vector3d> vertices);
+        friend class RayTracer;
+        void setVertices(std::vector<Vector3d> vertices);
 
-        // TODO: store fill color for this polygon as well???
-        // vertices of triangle in 3D space
-        std::vector<Eigen::Vector3d> vertices;
-        // triangle fan for this polygon
-        std::vector<Triangle> triangles;
+        std::vector<Vector3d> vertices;  // vertices of triangle in 3D space
+        std::vector<Triangle> triangles; // triangle fan for this polygon
+        Vector3d color;                  // color of this polygon (default: black)
 };
 #endif
