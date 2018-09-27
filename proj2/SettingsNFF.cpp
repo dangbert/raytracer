@@ -14,6 +14,16 @@ SettingsNFF::SettingsNFF() {
     reset();
 }
 
+/*
+ * destruct this object
+ */
+SettingsNFF::~SettingsNFF() {
+    for (unsigned int i=0; i<surfaces.size(); i++) {
+        delete surfaces[i];
+    }
+    surfaces.clear();
+}
+
 // reset to default settings
 void SettingsNFF::reset() {
     // default background color is 0,0,0

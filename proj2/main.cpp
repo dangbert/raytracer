@@ -11,9 +11,11 @@ void testPolygons();
 
 // my driver
 int main(int argc, char *argv[]) {
-    //testTriangles();  // test my code
-    //testPolygons();
-    //return 0;
+    /*
+    testTriangles();  // test my code
+    testPolygons();
+    return 0;
+    */
 
     // parse args
     if (argc != 2) {
@@ -22,14 +24,8 @@ int main(int argc, char *argv[]) {
     }
     string filename = argv[1];
 
-    SettingsNFF nff = SettingsNFF();
-    if (nff.readFile(filename) != 0) {
-        cout << "error parsing " << filename << endl;
-        exit(1);
-    }
-
-    // create Ray Tracer using these settings
-    RayTracer rayT = RayTracer(nff);
+    // create Ray Tracer using this nff file
+    RayTracer rayT = RayTracer(filename);
 
     // render the image
     rayT.render("out.ppm", false);

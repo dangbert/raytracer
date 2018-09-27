@@ -4,8 +4,15 @@
 #include <math.h>
 using namespace std;
 
-RayTracer::RayTracer(SettingsNFF nff) {
-    this->nff = nff;
+/**
+ * constructs a RayTracer object
+ * filename:  name of nff file to use
+ */
+RayTracer::RayTracer(std::string filename) {
+    if (nff.readFile(filename) != 0) {
+        cout << "error parsing " << filename << endl;
+        exit(1);
+    }
 }
 
 /**

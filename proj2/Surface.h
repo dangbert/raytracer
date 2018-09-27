@@ -11,8 +11,8 @@ using Eigen::Vector3d;
 
 class Surface {
     public:
-        Surface();
-        Surface(Vector3d color);
+        Surface(Vector3d color=Vector3d(0,0,0));
+        virtual ~Surface() {} // (needed so we can call delete on a *Surface)
         virtual double intersect(Ray ray, double hither=-1, bool debug=false) const = 0;
 
      private:

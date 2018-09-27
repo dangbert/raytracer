@@ -18,6 +18,7 @@ using Eigen::Vector3d;
 class SettingsNFF {
     public:
         SettingsNFF();
+        ~SettingsNFF();
         int readFile(std::string fname);
         friend std::ostream &operator<<(std::ostream &sout, const SettingsNFF &nff);
         void reset();
