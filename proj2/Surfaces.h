@@ -12,13 +12,16 @@ using Eigen::Vector3d;
 
 // forward delcaration
 class Ray;
+class Test;
 
 /**
  *  class to represent a triangle in 3D space
  */
 class Triangle {
+    friend class Test;
     public:
-        Triangle(Vector3d p1, Vector3d p2, Vector3d p3);
+        Triangle(Vector3d p1, Vector3d p2, Vector3d p3)
+            : p1(p1), p2(p2), p3(p3) {};
         double intersect(Ray ray, bool debug=false) const;
         void intersectValues(Ray ray, double vals[], bool debug=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Triangle &tri);
@@ -33,32 +36,31 @@ class Triangle {
  *  class for geometric surfaces to derive from
  */
 class Surface {
+    friend class RayTracer;
+    friend class Test;
     public:
-        Surface(Vector3d color=Vector3d(0,0,0)) : color(color) {};
+        Surface(Material &matr) : matr(matr) {};
         virtual ~Surface() {} // (needed so we can call delete on a *Surface)
         virtual double intersect(Ray ray, double hither=-1, bool debug=false) const = 0;
 
-     private:
-        friend class RayTracer;
-
      protected:
-        Vector3d color;                  // color of this polygon (default: black)
+        Material &matr;         // material for this surface
 };
 
 /**
  *  class to represent a polygon in 3D space
+ *  only works for convex polygons at the moment
  */
 class Polygon : public Surface {
+    friend class Test;
     public:
-        Polygon(std::vector<Vector3d> vertices, Vector3d color=Vector3d(0,0,0));
+        Polygon(Material &matr, std::vector<Vector3d> vertices);
         double intersect(Ray ray, double hither=-1, bool debug=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Polygon &poly);
         std::vector<Triangle> getTriangles() const;
         void printTriangles() const;
 
      private:
-        void setVertices(std::vector<Vector3d> vertices);
-
         std::vector<Vector3d> vertices;  // vertices of triangle in 3D space
         std::vector<Triangle> triangles; // triangle fan for this polygon
 };
@@ -67,8 +69,10 @@ class Polygon : public Surface {
  *  Implements a class to represent a sphere in 3D space
  */
 class Sphere : public Surface {
+    friend class Test;
     public:
-        Sphere(Vector3d center, double radius, Vector3d color=Vector3d(0,0,0));
+        Sphere(Material &matr, Vector3d center, double radius)
+            : Surface(matr), center(center), radius(radius) {};
         double intersect(Ray ray, double hither=-1, bool debug=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Sphere &sp);
 

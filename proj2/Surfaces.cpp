@@ -9,13 +9,6 @@ using std::endl;
 ////////////////////////////
 ///// Triangle class: //////
 ////////////////////////////
-
-Triangle::Triangle(Eigen::Vector3d p1, Eigen::Vector3d p2, Eigen::Vector3d p3) {
-    this->p1 = p1;
-    this->p2 = p2;
-    this->p3 = p3;
-}
-
 /*
  * returns distance along ray at which it intersects this triangle
  * (-1 if no intersection)
@@ -95,17 +88,10 @@ std::ostream &operator<<(std::ostream &sout, const Triangle &tri) {
  * color:    the color of this polygon (1,1,1) for white
  *           (defaults to black (0,0,0))
  */
-Polygon::Polygon(std::vector<Vector3d> vertices, Vector3d color)
+Polygon::Polygon(Material &matr, std::vector<Vector3d> vertices)
+    : Surface(matr), vertices(vertices)
 {
-    this->color = color;
-    setVertices(vertices);
-}
-
-void Polygon::setVertices(std::vector<Vector3d> vertices) {
-    // TODO: if vertices.size < 3, throw error
-    this->vertices = vertices;
     // create triangle fan
-    triangles.clear();
     for (unsigned int i=2; i<vertices.size(); i++) {
         triangles.push_back(Triangle(vertices[0], vertices[i-1], vertices[i]));
     }
@@ -145,6 +131,7 @@ double Polygon::intersect(Ray ray, double hither, bool debug) const {
 /**
  * return the triangle fan representing this polygon
  * (for debugging)
+ * TODO: just create a test class that is a friend of all the classes
  */
 std::vector<Triangle> Polygon::getTriangles() const {
     return triangles;
@@ -162,7 +149,7 @@ void Polygon::printTriangles() const {
 }
 
 /**
- * print out this object for debugging
+ * print out Polygon object for debugging
  */
 std::ostream& operator<<(std::ostream &sout, const Polygon &poly) {
     sout << "Polygon (" << poly.vertices.size() << " vertices):" << std::endl;
@@ -178,13 +165,6 @@ std::ostream& operator<<(std::ostream &sout, const Polygon &poly) {
 ////////////////////////////
 /////// Sphere class: //////
 ////////////////////////////
-Sphere::Sphere(Vector3d center, double radius, Vector3d color)
-{
-    this->color = color;
-    this->center = center;
-    this->radius = radius;
-}
-
 double Sphere::intersect(Ray ray, double hither, bool debug) const {
     // based on p77 in textbook 
 
@@ -221,7 +201,7 @@ double Sphere::intersect(Ray ray, double hither, bool debug) const {
 }
 
 /**
- * print out this object for debugging
+ * print out Sphere object for debugging
  */
 std::ostream &operator<<(std::ostream &sout, const Sphere &sp) {
     sout << "Sphere: at (" << sp.center[0] << "," << sp.center[1] << "," << sp.center[2] << ")";

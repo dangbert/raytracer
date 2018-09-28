@@ -10,8 +10,18 @@
 using namespace std;
 using Eigen::Vector3d;
 
+////////////////////////////
+//// SettingsNFF class: ////
+////////////////////////////
 SettingsNFF::SettingsNFF() {
-    reset();
+    // default background color is 0,0,0
+    b_color = Vector3d(0,0,0);
+    v_from = Vector3d(0,0,0);
+    v_at = Vector3d(0,0,0);
+    v_up = Vector3d(0,0,0);
+    v_angle = 0;
+    v_hither = -1;  // -1 indicates that hither isn't set
+    v_resolution = Eigen::Vector2i(0,0);
 }
 
 /*
@@ -24,34 +34,20 @@ SettingsNFF::~SettingsNFF() {
     surfaces.clear();
 }
 
-// reset to default settings
-void SettingsNFF::reset() {
-    // default background color is 0,0,0
-    b_color = Vector3d(0,0,0);
-    v_from = Vector3d(0,0,0);
-    v_at = Vector3d(0,0,0);
-    v_up = Vector3d(0,0,0);
-    v_angle = 0;
-    v_hither = -1;  // -1 indicates that hither isn't set
-    v_resolution = Eigen::Vector2i(0,0);
-}
-
 /**
- * You should be able to read any NFF format file, but ignore anything you do not
- * implement. For the basic assignment, you should at least handle the "v" viewing
- * specification, "b" background color, "f" object material specification (just
- * the r g b color part, ignore the rest), and "p" polygon specification. "c" and
- * "pp" are all multi-line, so you will at least need to recognize enough of those
- * to know how much to skip
+ * Read an NFF format file
+ * (ignores things that are not yet implement in this class)
  */
 int SettingsNFF::readFile(std::string fname) {
-    reset(); // reset to default settings
+    if (surfaces.size() != 0) {
+        cout << "this object has already read a file" << endl;
+        return -1;
+    }
     std::string line;
     std::string mode = "";  // for sections with multiple lines
     int p_remaining = 0;    // number of vertices remaining (when mode == "p")
     ifstream f(fname);
     std::vector<Vector3d> cur_vertices;    // vertices for current polygon
-    Vector3d curColor = Vector3d(0,0,0);   // most recent fill color
 
     while (std::getline(f, line)) {
         // split line on space delimeter to vector of strings
@@ -71,12 +67,16 @@ int SettingsNFF::readFile(std::string fname) {
             if (!(iss >> tmp >> b_color[0] >> b_color[1] >> b_color[2])) { return 1; } // error
         }
         // fill color and shading parameters
-        // The fill color is used to color the objects following it until a new color is assigned
+        // these material properties apply to all the subsequent surfaces
+        // (until a newer "f" line appears in the file)
         else if (tokens.at(0) == "f") {
             mode = "f";
             // "f" red green blue Kd Ks Shine T index_of_refraction
             // f %g %g %g %g %g %g %g %g
-            if (!(iss >> tmp >> curColor[0] >> curColor[1] >> curColor[2])) { return 1; }
+            Material matr = Material();
+            if (!(iss >> tmp >> matr.color[0] >> matr.color[1] >> matr.color[2])) { return 1; }
+            if (!(iss >> matr.Kd >> matr.Ks >> matr.shine >> matr.T >> matr.refIndx)) { return 1; }
+            materials.push_back(matr);
         }
         else if (tokens.at(0) == "s") {
             // "s" center.x center.y center.z radius
@@ -85,7 +85,7 @@ int SettingsNFF::readFile(std::string fname) {
             Vector3d center;
             double radius;
             if (!(iss >> tmp >> center[0] >> center[1] >> center[2] >> radius)) { return 1; }
-            surfaces.push_back(new Sphere(center, radius, curColor));
+            surfaces.push_back(new Sphere(materials.back(), center, radius));
         }
         else if (tokens.at(0) == "p" || mode == "p") {
             // "p" total_vertices
@@ -99,13 +99,14 @@ int SettingsNFF::readFile(std::string fname) {
                 continue; // advance to next line of file
             }
             Vector3d vert; // vertex
+            // TODO: instead of this weird "mode" thing just do get line p_remaining times right here.
             if (!(iss >> vert[0] >> vert[1] >> vert[2])) { return 1; }
             cur_vertices.push_back(vert);
 
             if (--p_remaining == 0) {
                 mode = ""; // "p" mode is over
                 // create Polygon object using these vertices and the current fill color
-                surfaces.push_back(new Polygon(cur_vertices, curColor));
+                surfaces.push_back(new Polygon(materials.back(), cur_vertices));
                 cur_vertices.clear();
             }
         }
@@ -178,3 +179,7 @@ std::ostream& operator<<(std::ostream &sout, const SettingsNFF &nff) {
     sout << "------------------\n";
     return sout;
 }
+
+////////////////////////////
+////// Material class: /////
+////////////////////////////

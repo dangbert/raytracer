@@ -3,7 +3,7 @@ CC = g++
 CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors -O2
 
 NAME = proj2
-OBJS = main.o Tracer.o Settings.o Surfaces.o
+OBJS = main.o Tracer.o Settings.o Surfaces.o Test.o
 DEPS = *.h
 INCLUDE = -I../common -I/usr/include/eigen3/
 
