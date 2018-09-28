@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <assert.h>
-#include "RayTracer.h"
+#include "Tracer.h"
 using Eigen::Vector3d;
 
 using namespace std;

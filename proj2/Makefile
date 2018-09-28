@@ -1,10 +1,9 @@
 # https://developers.redhat.com/blog/2018/03/21/compiler-and-linker-flags-gcc/
 CC = g++
 CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors -O2
-#-std=c++98
 
-NAME = proj1
-OBJS = main.o RayTracer.o SettingsNFF.o Ray.o Polygon.o Triangle.o Sphere.o Surface.o
+NAME = proj2
+OBJS = main.o Tracer.o Settings.o Surfaces.o
 DEPS = *.h
 INCLUDE = -I../common -I/usr/include/eigen3/
 
@@ -24,4 +23,4 @@ clean:
 
 .PHONY: run
 run:
-	make && ./$(NAME) inputs/rotated-tetra-3.nff
+	make && ./$(NAME) ../proj1/inputs/rotated-tetra-3.nff

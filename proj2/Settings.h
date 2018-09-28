@@ -1,19 +1,20 @@
-#ifndef _SETTINGSNFF_H_
-#define _SETTINGSNFF_H_
-/* File: SettingsNFF.h
-    Dan Engbert - UMBC CMSC435 F18 Project 1
+#ifndef _SETTINGS_H_
+#define _SETTINGS_H_
+/* File: Settings.h
+ *  This file defines classes for storing data from NFF files
+ *  Dan Engbert - UMBC CMSC435 F18 Project 1
 */
+
 #include <stdlib.h>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <Eigen/Dense>
-#include "Surface.h"
-#include "Polygon.h"
-#include "Sphere.h"
-
 using Eigen::Vector3d;
+
+// forward delcaration
+class Surface;
 
 class SettingsNFF {
     public:
@@ -38,4 +39,5 @@ class SettingsNFF {
         Eigen::Vector2i v_resolution;    // x resolution, y resolution
         std::vector<Surface*> surfaces;   // list of objects in scene
 };
+#include "Surfaces.h"
 #endif

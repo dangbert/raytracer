@@ -1,4 +1,4 @@
-#include "SettingsNFF.h"
+#include "Settings.h"
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
