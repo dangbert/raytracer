@@ -32,7 +32,7 @@ int Test::testPolygons() {
     vertices.push_back(Vector3d(3,2,5));
     vertices.push_back(Vector3d(1.5,3,5));
     vertices.push_back(Vector3d(0,1,5));
-    Material matr;
+    Material *matr = new Material();
     Polygon poly = Polygon(matr, vertices);
     int count = 0;
     double res;
@@ -60,6 +60,7 @@ int Test::testPolygons() {
     cout << "[[test" << count << " passed]]\n" << endl;
 
     cout << "[[[[POLYGON TESTS COMPLETE]]]]\n" << endl;
+    delete matr;
     return 0;
 }
 

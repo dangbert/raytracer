@@ -144,7 +144,7 @@ Vector3d RayTracer::trace(Ray ray, bool debug) {
 
     if (dist != -1) {
         // ray intersected with an object
-        return nff.surfaces[closest]->matr.color;
+        return nff.surfaces[closest]->matr->color;
     }
     else {
         return nff.b_color;

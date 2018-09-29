@@ -31,6 +31,7 @@ class Material {
         double shine;     // Pong cosing power for highlights
         double T;         // Transmittance (fraction of contribution of the transmitting ray)
         double refIndx;   // refraction idex
+        friend std::ostream &operator<<(std::ostream &sout, const Material &matr);
 };
 
 /**
@@ -58,7 +59,8 @@ class SettingsNFF {
         double v_hither;          // don't render things closer than this distance away
         Eigen::Vector2i v_resolution;     // x resolution, y resolution
         std::vector<Surface*> surfaces;   // all surfaces in scene
-        std::vector<Material> materials;  // materials in nff file
+        // all materials in nff file (surfaces will store a pointer to there respective material)
+        std::vector<Material*> materials;
 };
 #include "Surfaces.h"
 #endif

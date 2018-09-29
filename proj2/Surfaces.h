@@ -39,12 +39,12 @@ class Surface {
     friend class RayTracer;
     friend class Test;
     public:
-        Surface(Material &matr) : matr(matr) {};
+        Surface(Material *matr) : matr(matr) {};
         virtual ~Surface() {} // (needed so we can call delete on a *Surface)
         virtual double intersect(Ray ray, double hither=-1, bool debug=false) const = 0;
 
      protected:
-        Material &matr;         // material for this surface
+        Material *matr;         // material for this surface
 };
 
 /**
@@ -54,7 +54,7 @@ class Surface {
 class Polygon : public Surface {
     friend class Test;
     public:
-        Polygon(Material &matr, std::vector<Vector3d> vertices);
+        Polygon(Material *matr, std::vector<Vector3d> vertices);
         double intersect(Ray ray, double hither=-1, bool debug=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Polygon &poly);
         void printTriangles() const;
@@ -71,7 +71,7 @@ class Polygon : public Surface {
 class PolygonPatch : public Polygon {
     friend class Test;
     public:
-        PolygonPatch(Material &matr, std::vector<Vector3d> vertices, std::vector<Vector3d> normals)
+        PolygonPatch(Material *matr, std::vector<Vector3d> vertices, std::vector<Vector3d> normals)
             : Polygon(matr, vertices), normals(normals) {};
         friend std::ostream &operator<<(std::ostream &sout, const PolygonPatch &pp);
 
@@ -85,7 +85,7 @@ class PolygonPatch : public Polygon {
 class Sphere : public Surface {
     friend class Test;
     public:
-        Sphere(Material &matr, Vector3d center, double radius)
+        Sphere(Material *matr, Vector3d center, double radius)
             : Surface(matr), center(center), radius(radius) {};
         double intersect(Ray ray, double hither=-1, bool debug=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Sphere &sp);

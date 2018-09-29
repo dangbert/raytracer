@@ -88,7 +88,7 @@ std::ostream &operator<<(std::ostream &sout, const Triangle &tri) {
  * color:    the color of this polygon (1,1,1) for white
  *           (defaults to black (0,0,0))
  */
-Polygon::Polygon(Material &matr, std::vector<Vector3d> vertices)
+Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices)
     : Surface(matr), vertices(vertices)
 {
     // create triangle fan

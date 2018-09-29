@@ -32,6 +32,10 @@ SettingsNFF::~SettingsNFF() {
         delete surfaces[i];
     }
     surfaces.clear();
+    for (unsigned int i=0; i<materials.size(); i++) {
+        delete materials[i];
+    }
+    materials.clear();
 }
 
 /**
@@ -56,8 +60,6 @@ int SettingsNFF::readFile(std::string fname) {
         std::istream_iterator<std::string> end;
         std::vector<std::string> tokens(begin, end);
 
-        //cout << line << "\t(length=" << tokens.size() << " mode=" << mode << ")" << endl;
-
         std::istringstream iss(line); // string stream to use below
         std::string tmp;
         // NOTE: all one line sections must come first in this if/else if section of code
@@ -73,9 +75,9 @@ int SettingsNFF::readFile(std::string fname) {
             mode = "f";
             // "f" red green blue Kd Ks Shine T index_of_refraction
             // f %g %g %g %g %g %g %g %g
-            Material matr = Material();
-            if (!(iss >> tmp >> matr.color[0] >> matr.color[1] >> matr.color[2])) { return -1; }
-            if (!(iss >> matr.Kd >> matr.Ks >> matr.shine >> matr.T >> matr.refIndx)) { return -1; }
+            Material *matr = new Material();
+            if (!(iss >> tmp >> matr->color[0] >> matr->color[1] >> matr->color[2])) { return -1; }
+            if (!(iss >> matr->Kd >> matr->Ks >> matr->shine >> matr->T >> matr->refIndx)) { return -1; }
             materials.push_back(matr);
         }
         else if (tokens.at(0) == "s") {
@@ -211,6 +213,24 @@ std::ostream& operator<<(std::ostream &sout, const SettingsNFF &nff) {
     sout << "(" << polyCount << " polygons)" << endl;
     sout << "(" << polyPatchCount << " polygon patches)" << endl;
     sout << "(" << sphereCount << " spheres)" << endl;
+
+    // print materials
+    sout << "\nALL MATERIALS:" << endl;
+    for (unsigned int i=0; i<nff.materials.size(); i++) {
+        sout << *(nff.materials[i]) << endl;
+    }
     sout << "------------------\n";
+    return sout;
+}
+
+////////////////////////////
+////// Material class: /////
+////////////////////////////
+// print out the NFF settings stored in this object for debugging
+std::ostream &operator<<(std::ostream &sout, const Material &matr) {
+    sout << "Material:" << std::endl;
+    sout << "  color: (" << matr.color[0] << ", " << matr.color[1] << ", " <<  matr.color[2] << ")" << endl;
+    sout << "  Kd=" << matr.Kd << ", ks=" << matr.Ks << endl;
+    sout << "  shine=" << matr.shine << ", T=" << matr.T << ", refIndx=" << matr.refIndx << endl;
     return sout;
 }
