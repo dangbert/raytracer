@@ -64,7 +64,7 @@ int SettingsNFF::readFile(std::string fname) {
         // background color (b %g %g %g)
         if (tokens.at(0) == "b") {
             mode = "b";
-            if (!(iss >> tmp >> b_color[0] >> b_color[1] >> b_color[2])) { return 1; } // error
+            if (!(iss >> tmp >> b_color[0] >> b_color[1] >> b_color[2])) { return -1; } // error
         }
         // fill color and shading parameters
         // these material properties apply to all the subsequent surfaces
@@ -74,8 +74,8 @@ int SettingsNFF::readFile(std::string fname) {
             // "f" red green blue Kd Ks Shine T index_of_refraction
             // f %g %g %g %g %g %g %g %g
             Material matr = Material();
-            if (!(iss >> tmp >> matr.color[0] >> matr.color[1] >> matr.color[2])) { return 1; }
-            if (!(iss >> matr.Kd >> matr.Ks >> matr.shine >> matr.T >> matr.refIndx)) { return 1; }
+            if (!(iss >> tmp >> matr.color[0] >> matr.color[1] >> matr.color[2])) { return -1; }
+            if (!(iss >> matr.Kd >> matr.Ks >> matr.shine >> matr.T >> matr.refIndx)) { return -1; }
             materials.push_back(matr);
         }
         else if (tokens.at(0) == "s") {
@@ -84,23 +84,23 @@ int SettingsNFF::readFile(std::string fname) {
             mode = "f";
             Vector3d center;
             double radius;
-            if (!(iss >> tmp >> center[0] >> center[1] >> center[2] >> radius)) { return 1; }
+            if (!(iss >> tmp >> center[0] >> center[1] >> center[2] >> radius)) { return -1; }
             surfaces.push_back(new Sphere(materials.back(), center, radius));
         }
         else if (tokens.at(0) == "p" || mode == "p") {
             // "p" total_vertices
             // vert1.x vert1.y vert1.z
-            // [etc. for total_vertices vertices]
+            // [etc. for total_vertices]
             mode = "p";
             if (tokens.at(0) == "p") {
                 // store number of vertices to process
-                if (!(iss >> tmp >> p_remaining)) { return 1; }
+                if (!(iss >> tmp >> p_remaining)) { return -1; }
                 cur_vertices.clear();
                 continue; // advance to next line of file
             }
             Vector3d vert; // vertex
             // TODO: instead of this weird "mode" thing just do get line p_remaining times right here.
-            if (!(iss >> vert[0] >> vert[1] >> vert[2])) { return 1; }
+            if (!(iss >> vert[0] >> vert[1] >> vert[2])) { return -1; }
             cur_vertices.push_back(vert);
 
             if (--p_remaining == 0) {
@@ -109,6 +109,26 @@ int SettingsNFF::readFile(std::string fname) {
                 surfaces.push_back(new Polygon(materials.back(), cur_vertices));
                 cur_vertices.clear();
             }
+        }
+        else if (tokens.at(0) == "pp") {
+            // "pp" total_vertices
+            // vert1.x vert1.y vert1.z norm1.x norm1.y norm1.z
+            // [etc. for total_vertices]
+            // store number of vertices to process
+            if (!(iss >> tmp >> p_remaining)) { return -1; }
+            cur_vertices.clear();
+            std::vector<Vector3d> cur_normals;  // normals for polygon patch
+            for (int i=0; i<p_remaining; i++) {
+                if (! std::getline(f, line))
+                    return -1;
+                std::istringstream iss2(line);
+                Vector3d vert, norm; // vertex, normal of vertex
+                if (!(iss2 >> vert[0] >> vert[1] >> vert[2])) { return -1; }
+                if (!(iss2 >> norm[0] >> norm[1] >> norm[2])) { return -1; }
+                cur_vertices.push_back(vert);
+                cur_normals.push_back(norm);
+            }
+            surfaces.push_back(new PolygonPatch(materials.back(), cur_vertices, cur_normals));
         }
         // viewing position
         else if (tokens.at(0) == "v" || mode == "v") {
@@ -124,22 +144,22 @@ int SettingsNFF::readFile(std::string fname) {
             mode = "v";
 
             if (tokens.at(0) == "from") {
-                if (!(iss >> tmp >> v_from[0] >> v_from[1] >> v_from[2])) { return 1; } // error
+                if (!(iss >> tmp >> v_from[0] >> v_from[1] >> v_from[2])) { return -1; } // error
             }
             if (tokens.at(0) == "at") {
-                if (!(iss >> tmp >> v_at[0] >> v_at[1] >> v_at[2])) { return 1; }
+                if (!(iss >> tmp >> v_at[0] >> v_at[1] >> v_at[2])) { return -1; }
             }
             if (tokens.at(0) == "up") {
-                if (!(iss >> tmp >> v_up[0] >> v_up[1] >> v_up[2])) { return 1; }
+                if (!(iss >> tmp >> v_up[0] >> v_up[1] >> v_up[2])) { return -1; }
             }
             if (tokens.at(0) == "angle") {
-                if (!(iss >> tmp >> v_angle)) { return 1; }
+                if (!(iss >> tmp >> v_angle)) { return -1; }
             }
             if (tokens.at(0) == "hither") {
-                if (!(iss >> tmp >> v_hither)) { return 1; }
+                if (!(iss >> tmp >> v_hither)) { return -1; }
             }
             if (tokens.at(0) == "resolution") {
-                if (!(iss >> tmp >> v_resolution[0] >> v_resolution[1])) { return 1; }
+                if (!(iss >> tmp >> v_resolution[0] >> v_resolution[1])) { return -1; }
             }
 
         }
@@ -169,17 +189,28 @@ std::ostream& operator<<(std::ostream &sout, const SettingsNFF &nff) {
     // TODO: consider doing above prints like this as well rather than using a helper function
     sout << "v_resolution: " << nff.v_resolution[0] << " " << nff.v_resolution[1] << endl;
 
+    // get count of each type of surface and print the first occurence of each
     sout << nff.surfaces.size() << " surfaces total" << endl;
-    /*
-    sout << endl;
-    for (std::vector<Polygon>::size_type i = 0; i != nff.polygons.size(); i++) {
-        sout << nff.polygons[i] << endl;
+    int polyCount = 0;
+    int polyPatchCount = 0;
+    int sphereCount = 0;
+    for (unsigned int i=0; i<nff.surfaces.size(); i++) {
+        if (dynamic_cast<PolygonPatch*>(nff.surfaces[i]) != NULL) {
+            if (polyPatchCount == 0) cout << *dynamic_cast<PolygonPatch*>(nff.surfaces[i]) << endl;
+            polyPatchCount++;
+        }
+        else if (dynamic_cast<Polygon*>(nff.surfaces[i]) != NULL) {
+            if (polyCount == 0) cout << *dynamic_cast<Polygon*>(nff.surfaces[i]) << endl;
+            polyCount++;
+        }
+        else if (dynamic_cast<Sphere*>(nff.surfaces[i]) != NULL) {
+            if (sphereCount == 0) cout << *dynamic_cast<Sphere*>(nff.surfaces[i]) << endl;
+            sphereCount++;
+        }
     }
-    */
+    sout << "(" << polyCount << " polygons)" << endl;
+    sout << "(" << polyPatchCount << " polygon patches)" << endl;
+    sout << "(" << sphereCount << " spheres)" << endl;
     sout << "------------------\n";
     return sout;
 }
-
-////////////////////////////
-////// Material class: /////
-////////////////////////////

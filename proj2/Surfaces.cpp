@@ -129,15 +129,6 @@ double Polygon::intersect(Ray ray, double hither, bool debug) const {
 }
 
 /**
- * return the triangle fan representing this polygon
- * (for debugging)
- * TODO: just create a test class that is a friend of all the classes
- */
-std::vector<Triangle> Polygon::getTriangles() const {
-    return triangles;
-}
-
-/**
  * print out the triangle fan for this polygon
  * (for debugging)
  */
@@ -155,11 +146,26 @@ std::ostream& operator<<(std::ostream &sout, const Polygon &poly) {
     sout << "Polygon (" << poly.vertices.size() << " vertices):" << std::endl;
     for (unsigned int i = 0; i != poly.vertices.size(); i++) {
         sout << "   ";
-        sout << poly.vertices[i][0] << "\t" << poly.vertices[i][1] << "\t" << poly.vertices[i][2] << "\t" << std::endl;
+        sout << "(" << poly.vertices[i][0] << "," << poly.vertices[i][1] << "," << poly.vertices[i][2] << ")" << endl;
     }
     return sout;
 }
 
+////////////////////////////
+/// Polygon Patch class: ///
+////////////////////////////
+/**
+ * print out PolygonPatch object for debugging
+ */
+std::ostream &operator<<(std::ostream &sout, const PolygonPatch &pp) {
+    sout << "PolygonPatch (" << pp.vertices.size() << " vertices):" << std::endl;
+    for (unsigned int i = 0; i != pp.vertices.size(); i++) {
+        sout << "   ";
+        sout << "(" << pp.vertices[i][0] << "," << pp.vertices[i][1] << "," << pp.vertices[i][2] << ")";
+        sout << ", normal: (" << pp.normals[i][0] << "," << pp.normals[i][1] << "," << pp.normals[i][2] << ")" << std::endl;
+    }
+    return sout;
+}
 
 
 ////////////////////////////

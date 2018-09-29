@@ -57,12 +57,26 @@ class Polygon : public Surface {
         Polygon(Material &matr, std::vector<Vector3d> vertices);
         double intersect(Ray ray, double hither=-1, bool debug=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Polygon &poly);
-        std::vector<Triangle> getTriangles() const;
         void printTriangles() const;
 
-     private:
+    protected:
         std::vector<Vector3d> vertices;  // vertices of triangle in 3D space
         std::vector<Triangle> triangles; // triangle fan for this polygon
+};
+
+/**
+ *  class to represent a (convex) polygon in 3D space
+ *  where the normal of the surface at each vertex is known
+ */
+class PolygonPatch : public Polygon {
+    friend class Test;
+    public:
+        PolygonPatch(Material &matr, std::vector<Vector3d> vertices, std::vector<Vector3d> normals)
+            : Polygon(matr, vertices), normals(normals) {};
+        friend std::ostream &operator<<(std::ostream &sout, const PolygonPatch &pp);
+
+     private:
+        std::vector<Vector3d> normals;  // normal of surface at each vertex
 };
 
 /**

@@ -29,6 +29,7 @@ RayTracer::RayTracer(std::string filename) {
         cout << "error parsing " << filename << endl;
         exit(1);
     }
+    cout << nff << endl;
 }
 
 /**
