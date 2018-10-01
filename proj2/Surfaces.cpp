@@ -9,26 +9,11 @@ using std::endl;
 ////////////////////////////
 ///// Triangle class: //////
 ////////////////////////////
-/*
- * returns distance along ray at which it intersects this triangle
- * (-1 if no intersection)
- */
-double Triangle::intersect(Ray ray, bool debug) const {
-    double vals[4];
-    intersectValues(ray, vals, debug); // [B, g, t, dist]
-    return vals[3];
-}
 
 /*
- * helper function for intersect()
- * vals: array of length 3 to store result [B, g, t, dist]
- *
- * calculates the values B, g, t that are the solution to
- *   the intersection of the ray and this triangle
- *   and the distance (dist) along the ray at which the interesection occurs
- *   (-1 if no intersection)
+ * returns HitRecord with info about intersection of the given Ray and this Triangle
  */
-void Triangle::intersectValues(Ray ray, double vals[], bool debug) const {
+HitRecord Triangle::intersect(Ray ray, bool debug) const {
     // ray: e + td
     // triangle a + B(b-a) + g(c-a)
     // solve system: Ax=b
@@ -44,34 +29,48 @@ void Triangle::intersectValues(Ray ray, double vals[], bool debug) const {
     M1 << p1-ray.eye, p1-p3, ray.dir;
     M2 << p1-p2, p1-ray.eye, ray.dir;
     M3 << p1-p2, p1-p3, p1-ray.eye;
-    if (debug)
-        cout << "A =\n " << A << endl;
     double det = A.determinant();
     double B = M1.determinant() / det;
     double g = M2.determinant() / det;
     double t = M3.determinant() / det;
-    vals[0] = B;
-    vals[1] = g;
-    vals[2] = t;
 
+    HitRecord hit(SurfaceType::TRIANGLE, -1);
     // check conditions to see if solution is valid
     if (t>0 && 0<=B && 0<=g && B+g<=1) {
-        Vector3d point = ray.eye + t * ray.dir; // intersection point
-        vals[3] = (point - ray.eye).norm();     // distance along ray (to intersection point)
-    }
-    else {
-        vals[3] = -1;
+        Vector3d point = ray.eye + t * ray.dir;  // intersection point
+        double dist = (point - ray.eye).norm();  // actual distance (along ray) of intersection point
+        hit = HitRecord(SurfaceType::TRIANGLE, t, dist, point, B, g);
     }
     if (debug)
-        cout << "\tt=" << t << ", B=" << B << ", g=" << g << "\tdist=" << vals[3] << endl;
+        cout << hit << endl;
+    return hit;
 }
 
-// print out this object for debugging
+/**
+ * return the surface normal of this triangle at the given point
+ * the normal of a triangle is same throughout the surface
+ * (unless this is a triangle patch and we're doing phong shading)
+ * TODO: add bool interpolate
+ */
+Vector3d Triangle::getNormal(HitRecord hit) const {
+    // doesn't need hit param now, but will if we interpolate later
+    return (p2-p1).cross(p3-p2).normalized();
+}
+
+/**
+ * print out Triangle object for debugging
+ */
 std::ostream &operator<<(std::ostream &sout, const Triangle &tri) {
     sout << "Triangle: ";
-    sout << "(" << tri.p1[0] << "," << tri.p1[1] << "," << tri.p1[2] << "), ";
-    sout << "(" << tri.p2[0] << "," << tri.p2[1] << "," << tri.p2[2] << "), ";
-    sout << "(" << tri.p3[0] << "," << tri.p3[1] << "," << tri.p3[2] << ")";
+    sout << "(" << tri.p1[0] << "," << tri.p1[1] << "," << tri.p1[2] << ")" << endl;
+    if (tri.patch)
+        sout << "normal: (" << tri.n1[0] << "," << tri.n1[1] << "," << tri.n1[2] << ")" << endl;
+    sout << "(" << tri.p2[0] << "," << tri.p2[1] << "," << tri.p2[2] << ")" << endl;
+    if (tri.patch)
+        sout << "normal: (" << tri.n2[0] << "," << tri.n2[1] << "," << tri.n2[2] << ")" << endl;
+    sout << "(" << tri.p3[0] << "," << tri.p3[1] << "," << tri.p3[2] << ")" << endl;
+    if (tri.patch)
+        sout << "normal: (" << tri.n3[0] << "," << tri.n3[1] << "," << tri.n3[2] << ")" << endl;
     return sout;
 }
 
@@ -88,8 +87,8 @@ std::ostream &operator<<(std::ostream &sout, const Triangle &tri) {
  * color:    the color of this polygon (1,1,1) for white
  *           (defaults to black (0,0,0))
  */
-Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices)
-    : Surface(matr), vertices(vertices)
+Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch, std::vector<Vector3d> normals)
+    : Surface(matr), vertices(vertices), patch(patch), normals(normals)
 {
     // create triangle fan
     for (unsigned int i=2; i<vertices.size(); i++) {
@@ -105,27 +104,43 @@ Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices)
  * hither:  ignore intersections that are closer than hither (-1 to disable)
  * debug:   whether or not to print out debug info for this intersection check
  */
-double Polygon::intersect(Ray ray, double hither, bool debug) const {
-    // distance along ray of closest triangle (-1 if none intersect)
-    double dist = -1;
-    for (unsigned int i=0; i<triangles.size(); i++) {
-        // actual distance (along ray) of intersection point
-        double res = triangles[i].intersect(ray, debug);
+HitRecord Polygon::intersect(Ray ray, double hither, bool debug) const {
+    HitRecord bestHit = HitRecord(SurfaceType::POLYGON, -1);
 
-        if (res != -1 && (dist == -1 || res < dist)) {
+    for (unsigned int i=0; i<triangles.size(); i++) {
+        // check for intersection of ray with this triangle
+        HitRecord hit = triangles[i].intersect(ray, debug);
+
+        // check if we should update bestHit
+        if (hit.t != -1 && (bestHit.t == -1 || hit.t < bestHit.t)) {
             // we hit a triangle for the first time, or a closer triangle
-            if (hither != -1 && res  < hither) {
+            if (hither != -1 && hit.dist < hither) {
                 // don't count as intersection if it's closer than hither
                 if (debug) {
-                    cout << "\t(skipping result: " << res << " due to hither: " << hither << ")" << endl;
+                    cout << "\t(skipping result: " << hit.dist << " due to hither: " << hither << ")" << endl;
                 }
                 continue;
             }
-
-            dist = res;
+            // update bestHit
+            hit.sType = SurfaceType::POLYGON;
+            hit.triIndex = i;
+            bestHit = hit;
         }
     }
-    return dist;
+    return bestHit;
+}
+
+/**
+ * returns the normal of the surface at hit.point
+ * where the given hit record is known to belong to this surface
+ * and hit.t != -1
+ */
+Vector3d Polygon::getNormal(HitRecord hit) const {
+    // TODO: if we are a polygon patch and want to interpolate the normal
+    //return triangles[hit.triIndex].getNormal(true);
+
+    // return the .getNormal() of the triangle we intersected
+    return triangles[hit.triIndex].getNormal(hit);
 }
 
 /**
@@ -149,30 +164,24 @@ std::ostream& operator<<(std::ostream &sout, const Polygon &poly) {
         sout << "(" << poly.vertices[i][0] << "," << poly.vertices[i][1] << "," << poly.vertices[i][2] << ")" << endl;
     }
     return sout;
-}
 
-////////////////////////////
-/// Polygon Patch class: ///
-////////////////////////////
-/**
- * print out PolygonPatch object for debugging
- */
-std::ostream &operator<<(std::ostream &sout, const PolygonPatch &pp) {
-    sout << "PolygonPatch (" << pp.vertices.size() << " vertices):" << std::endl;
-    for (unsigned int i = 0; i != pp.vertices.size(); i++) {
+    sout << "Polygon (" << poly.vertices.size() << " vertices):" << std::endl;
+    for (unsigned int i = 0; i != poly.vertices.size(); i++) {
         sout << "   ";
-        sout << "(" << pp.vertices[i][0] << "," << pp.vertices[i][1] << "," << pp.vertices[i][2] << ")";
-        sout << ", normal: (" << pp.normals[i][0] << "," << pp.normals[i][1] << "," << pp.normals[i][2] << ")" << std::endl;
+        sout << "(" << poly.vertices[i][0] << "," << poly.vertices[i][1] << "," << poly.vertices[i][2] << ")";
+        if (poly.patch)
+            sout << ", normal: (" << poly.normals[i][0] << "," << poly.normals[i][1] << "," << poly.normals[i][2] << ")" << std::endl;
+        sout << endl;
     }
     return sout;
 }
 
-
 ////////////////////////////
 /////// Sphere class: //////
 ////////////////////////////
-double Sphere::intersect(Ray ray, double hither, bool debug) const {
+HitRecord Sphere::intersect(Ray ray, double hither, bool debug) const {
     // based on p77 in textbook 
+    HitRecord hit(SurfaceType::SPHERE, -1);
 
     // discriminant
     Vector3d diff = ray.eye - center;
@@ -180,14 +189,14 @@ double Sphere::intersect(Ray ray, double hither, bool debug) const {
     // potentially 2 solutions
 
     if (disc < 0) {
-        return -1;  // no intersection
+        return hit;  // no intersection
     }
 
     double numerator = (-1 * ray.dir).dot(diff); // part of numerator
     double denominator = ray.dir.dot(ray.dir);   // entire denominator
     if (disc == 0) {
         // ray grazes sphere and touches it in exactly one point
-        return numerator / denominator;
+        hit.t = numerator / denominator;
     }
     else {
         // there are two solutions (where the ray enters and leaves)
@@ -200,10 +209,22 @@ double Sphere::intersect(Ray ray, double hither, bool debug) const {
         // distance of intersection point away from ray.eye
         double realDist = (t1 * ray.dir).norm();
         if (hither != -1 && realDist < hither) {
-            return -1;
+            return hit; // doesn't count as intersection
         }
-        return t1;
+        hit.t = t1;
     }
+    hit.point = ray.eye + hit.t * ray.dir;   // intersection point
+    hit.dist = (hit.point - ray.eye).norm(); // actual distance (along ray) of intersection point
+    return hit;
+}
+
+/**
+ * returns the normal of the surface at hit.point
+ * where the given hit record is known to belong to this surface
+ * and hit.t != -1
+ */
+Vector3d Sphere::getNormal(HitRecord hit) const {
+    // TODO: implement
 }
 
 /**

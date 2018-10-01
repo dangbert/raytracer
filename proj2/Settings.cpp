@@ -112,7 +112,7 @@ int SettingsNFF::readFile(std::string fname) {
                 cur_vertices.clear();
             }
         }
-        else if (tokens.at(0) == "pp") {
+        else if (tokens.at(0) == "pp") {        // polygon patch
             // "pp" total_vertices
             // vert1.x vert1.y vert1.z norm1.x norm1.y norm1.z
             // [etc. for total_vertices]
@@ -130,7 +130,7 @@ int SettingsNFF::readFile(std::string fname) {
                 cur_vertices.push_back(vert);
                 cur_normals.push_back(norm);
             }
-            surfaces.push_back(new PolygonPatch(materials.back(), cur_vertices, cur_normals));
+            surfaces.push_back(new Polygon(materials.back(), cur_vertices, true, cur_normals));
         }
         // viewing position
         else if (tokens.at(0) == "v" || mode == "v") {
@@ -194,24 +194,22 @@ std::ostream& operator<<(std::ostream &sout, const SettingsNFF &nff) {
     // get count of each type of surface and print the first occurence of each
     sout << nff.surfaces.size() << " surfaces total" << endl;
     int polyCount = 0;
-    int polyPatchCount = 0;
+    int polyPatchCount = 0; // number of polygons that are "patches"
     int sphereCount = 0;
     for (unsigned int i=0; i<nff.surfaces.size(); i++) {
-        if (dynamic_cast<PolygonPatch*>(nff.surfaces[i]) != NULL) {
-            if (polyPatchCount == 0) cout << *dynamic_cast<PolygonPatch*>(nff.surfaces[i]) << endl;
-            polyPatchCount++;
-        }
-        else if (dynamic_cast<Polygon*>(nff.surfaces[i]) != NULL) {
+        Polygon *poly = dynamic_cast<Polygon*>(nff.surfaces[i]);
+        Sphere *sphere = dynamic_cast<Sphere*>(nff.surfaces[i]);
+        if (poly != NULL) {
             if (polyCount == 0) cout << *dynamic_cast<Polygon*>(nff.surfaces[i]) << endl;
             polyCount++;
+            if (poly->isPatch()) polyPatchCount++;
         }
-        else if (dynamic_cast<Sphere*>(nff.surfaces[i]) != NULL) {
+        else if (sphere != NULL) {
             if (sphereCount == 0) cout << *dynamic_cast<Sphere*>(nff.surfaces[i]) << endl;
             sphereCount++;
         }
     }
-    sout << "(" << polyCount << " polygons)" << endl;
-    sout << "(" << polyPatchCount << " polygon patches)" << endl;
+    sout << "(" << polyCount << " polygons (" << polyPatchCount << " are patches))" << endl;
     sout << "(" << sphereCount << " spheres)" << endl;
 
     // print materials

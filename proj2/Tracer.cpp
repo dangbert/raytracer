@@ -17,6 +17,26 @@ std::ostream &operator<<(std::ostream &sout, const Ray &ray) {
     return sout;
 }
 
+
+////////////////////////////
+///// HitRecord class: /////
+////////////////////////////
+/*
+ * print out HitRecord object for debugging
+ */
+std::ostream &operator<<(std::ostream &sout, const HitRecord &hit) {
+    sout << "HitRecord: ";
+    sout << "sType=" << static_cast<std::underlying_type<SurfaceType>::type>(hit.sType) << ", t=" << hit.t;
+    if (hit.t != -1) {
+        sout << ", point=" << "(" << hit.point[0] << "," << hit.point[1] << "," << hit.point[2] << ")";
+        if (hit.sType == SurfaceType::TRIANGLE)
+            sout << ", B=" << hit.B << ", " << "g=" << hit.g << ", triIndex=" << hit.triIndex;
+    }
+    sout << endl;
+    return sout;
+}
+
+
 ////////////////////////////
 ///// RayTracer class: /////
 ////////////////////////////
@@ -130,20 +150,22 @@ void RayTracer::render(std::string filename, bool debug) {
  * debug:  whether to print extra info for debugging
  */
 Vector3d RayTracer::trace(Ray ray, bool debug) {
-    int closest = -1;  // index of closest polygon intersected by this ray
-    int dist = -1;     // distance (along the ray) to the intersection point
+    int closest = -1;  // index of closest Surface intersected by this ray
+    HitRecord bestHit(SurfaceType::POLYGON, -1); // record of the closest hit so far
     for (unsigned int i=0; i<nff.surfaces.size(); i++) {
-        int res = nff.surfaces[i]->intersect(ray, nff.v_hither, debug);
+        HitRecord hit = nff.surfaces[i]->intersect(ray, nff.v_hither, debug);
 
-        if (res != -1 && (dist == -1 || res < dist)) {
+        // check if we need to update bestHit
+        if (hit.dist != -1 && (bestHit.dist == -1 || hit.dist < bestHit.dist)) {
             // we had our first intersection, or found a closer intersection
             closest = i;
-            dist = res;
+            bestHit = hit;
         }
     }
 
-    if (dist != -1) {
+    if (bestHit.dist != -1) {
         // ray intersected with an object
+        // TODO: if we add matr field to HitRecord, just use that...
         return nff.surfaces[closest]->matr->color;
     }
     else {
