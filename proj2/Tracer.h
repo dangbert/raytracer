@@ -52,7 +52,7 @@ class RayTracer {
     friend class Test;
     public:
         RayTracer(std::string filename);
-        void render(std::string filename, bool debug=false);
+        void render(std::string filename, int bounces, bool debug=false);
         void animate(std::string filename, bool debug=false);
 
     private:

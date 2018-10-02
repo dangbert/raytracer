@@ -30,7 +30,16 @@ int main(int argc, char *argv[]) {
     RayTracer rayT = RayTracer(filename);
 
     // render the image
-    rayT.render("out.ppm", false);
+    rayT.render(tmp, 5, false);
+    /*
+    for (int i=0; i<5; i++) {
+        string tmp = "";
+        stringstream ss;
+        ss << "out" << i << ".ppm";
+        ss >> tmp;
+        rayT.render(tmp, i, false);
+    }
+    */
 
     // create animation
     //rayT.animate("out/out", false);

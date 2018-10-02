@@ -2,9 +2,8 @@ Dan Engbert (end1@umbc.edu), CMSC 435 Fall 18
 
 # Project2
 * Simple Implementation of a ray tracer that reads [nff files](https://www.fileformat.info/format/nff/egff.htm)
-and renders an image of the 3D scene.
+and renders an image of the 3D scene with shading.
 * Supports polygons and spheres
-* No shading at the moment...
 
 ## HELP RECEIVED:
 * https://www.fileformat.info/format/nff/egff.htm
@@ -17,11 +16,6 @@ and renders an image of the 3D scene.
 * Surfaces.h // geometric objects
 * Settings.h // nff settings, fill types
 * Tracer.h   // RayTracer, Ray
-
-#### Debugging
-"I recommend setting up a very simple scene+ with a single axis-aligned triangle
-at the origin and the camera at (0,0,1) looking at the origin. Then the
-calculations become easier to verify by hand."
 
 #### Compile Optimization:
 * use the ````-O2```` or ````-O3```` flag

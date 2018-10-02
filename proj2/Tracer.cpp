@@ -61,7 +61,7 @@ RayTracer::RayTracer(std::string filename) {
  *   (including the edge of pixels on each side rather than their centers)
  *   and pixels are square
  */
-void RayTracer::render(std::string filename, bool debug) {
+void RayTracer::render(std::string filename, int bounces, bool debug) {
     /*
      * NOTE:
      * world coordinates:  3D coordinate system (which surfaces are defined in respect to)
@@ -70,8 +70,6 @@ void RayTracer::render(std::string filename, bool debug) {
      *                     center of virtual image plane is (0,0,d)
      * image coordinates:  (i,j) discrete location of pixel in image
      */
-    int bounces = 5; // hardcoded for now
-
     cout << "\nrendering..." << endl;
     if (debug) {
         cout << nff << endl;
@@ -126,7 +124,6 @@ void RayTracer::render(std::string filename, bool debug) {
             // construct ray from camera through center of pixel
             Ray ray = Ray(nff.v_from, pos-nff.v_from);
             // get the color for this pixel
-            bounces = 5; // TODO: for now
             Vector3d color = trace(ray, bounces);
             // set color of pixel
             for (int k=0; k<3; k++) {
@@ -166,11 +163,11 @@ Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
             bestHit = hit;
         }
     }
-
     if (bestHit.dist == -1) {
         // ray didn't hit anything
         return nff.b_color;
     }
+
     // ray intersected with an object
     //return matr->color; // if we're not doing any shading at all
     // TODO: if we add matr field to HitRecord, just use that...
