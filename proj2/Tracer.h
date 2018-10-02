@@ -57,6 +57,6 @@ class RayTracer {
 
     private:
         SettingsNFF nff;
-        Eigen::Vector3d trace(Ray ray, bool debug=false);
+        Eigen::Vector3d trace(Ray ray, int bounces=0, bool debug=false);
 };
 #endif

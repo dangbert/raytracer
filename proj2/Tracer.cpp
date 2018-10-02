@@ -70,6 +70,7 @@ void RayTracer::render(std::string filename, bool debug) {
      *                     center of virtual image plane is (0,0,d)
      * image coordinates:  (i,j) discrete location of pixel in image
      */
+    int bounces = 5; // hardcoded for now
 
     cout << "\nrendering..." << endl;
     if (debug) {
@@ -125,10 +126,12 @@ void RayTracer::render(std::string filename, bool debug) {
             // construct ray from camera through center of pixel
             Ray ray = Ray(nff.v_from, pos-nff.v_from);
             // get the color for this pixel
-            Vector3d color = trace(ray);
+            bounces = 5; // TODO: for now
+            Vector3d color = trace(ray, bounces);
             // set color of pixel
             for (int k=0; k<3; k++) {
-                pixels[j*(WIDTH*3) + (i*3) + k] = color[k] * 255;
+                color[k] = min(max(color[k], 0.0), 1.0); // force value in range [0,1]
+                pixels[j*(WIDTH*3) + (i*3) + k] = (int) (color[k] * 255);
             }
         }
     }
@@ -146,10 +149,11 @@ void RayTracer::render(std::string filename, bool debug) {
  * return the color of the first object hit by this ray
  * (returns the background color if no object is hit)
  *
- * Ray:    the Ray being shot through the scene
- * debug:  whether to print extra info for debugging
+ * Ray:     the Ray being shot through the scene
+ * bounces: number of times to reflect ray after first intersection
+ * debug:   whether to print extra info for debugging
  */
-Vector3d RayTracer::trace(Ray ray, bool debug) {
+Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
     int closest = -1;  // index of closest Surface intersected by this ray
     HitRecord bestHit(SurfaceType::POLYGON, -1); // record of the closest hit so far
     for (unsigned int i=0; i<nff.surfaces.size(); i++) {
@@ -163,14 +167,45 @@ Vector3d RayTracer::trace(Ray ray, bool debug) {
         }
     }
 
-    if (bestHit.dist != -1) {
-        // ray intersected with an object
-        // TODO: if we add matr field to HitRecord, just use that...
-        return nff.surfaces[closest]->matr->color;
-    }
-    else {
+    if (bestHit.dist == -1) {
+        // ray didn't hit anything
         return nff.b_color;
     }
+    // ray intersected with an object
+    //return matr->color; // if we're not doing any shading at all
+    // TODO: if we add matr field to HitRecord, just use that...
+    Material *matr = nff.surfaces[closest]->matr;
+    Vector3d localColor = matr->color;
+    localColor = Vector3d(0,0,0); // for now
+
+    // do shading:::
+    // iterate over lights:
+    Vector3d V, N, H, L, R;
+    // unit vector from point of intersection to origin of ray
+    V = (bestHit.point - ray.eye).normalized();
+    double lightIntensity = 1.0 / sqrt(nff.lights.size());
+    for (unsigned int i=0; i<nff.lights.size(); i++) {
+        Light light = nff.lights[i];
+        // normal to surface at this point
+        N = nff.surfaces[closest]->getNormal(bestHit);
+        // unit vector pointing at light from point of intersection on surface
+        L = (light.pos - bestHit.point).normalized();
+        // unit vector from point of intersection, bisecting the angle between L and v
+        H = (L + V) / (L+V).norm();
+        // reflection direction
+        R = -V + 2*(V.dot(N)) * N;
+
+        // compute shading (diffuse and specular components)
+        double diffuse = max(0.0, N.dot(L));
+        double specular = pow(max(0.0, N.dot(H)), matr->shine);
+        for (int c=0; c<3; c++) {
+            localColor[c] += (matr->Kd * matr->color[c] * diffuse + matr->Ks * specular) * lightIntensity;
+        }
+    }
+    if (bounces-1 > 0) {
+        localColor += matr->Ks * trace(Ray(bestHit.point, R), bounces-1);
+    }
+    return localColor;
 }
 
 /**

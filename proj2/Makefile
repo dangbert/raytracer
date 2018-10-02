@@ -23,4 +23,5 @@ clean:
 
 .PHONY: run
 run:
-	make && ./$(NAME) ../proj1/inputs/rotated-tetra-3.nff
+	make && ./$(NAME) inputs/teapot-3.nff && display out.ppm
+#make && ./$(NAME) ../proj1/inputs/rotated-tetra-3.nff

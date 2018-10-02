@@ -35,6 +35,22 @@ class Material {
 };
 
 /**
+ * class representing a light source in 3D space
+ */
+class Light {
+    friend class SettingsNFF;
+    friend class RayTracer;
+    friend class Test;
+    public:
+        Light(Vector3d pos, Vector3d color=Vector3d(1,1,1))
+            : color(color), pos(pos) {};
+    private:
+        Vector3d color;
+        Vector3d pos;
+        friend std::ostream &operator<<(std::ostream &sout, const Light &light);
+};
+
+/**
  * class for parsing and storing info from an NFF file
  */
 class SettingsNFF {
@@ -61,6 +77,7 @@ class SettingsNFF {
         std::vector<Surface*> surfaces;   // all surfaces in scene
         // all materials in nff file (surfaces will store a pointer to there respective material)
         std::vector<Material*> materials;
+        std::vector<Light> lights;
 };
 #include "Surfaces.h"
 #endif

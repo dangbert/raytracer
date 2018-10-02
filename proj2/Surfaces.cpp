@@ -224,7 +224,7 @@ HitRecord Sphere::intersect(Ray ray, double hither, bool debug) const {
  * and hit.t != -1
  */
 Vector3d Sphere::getNormal(HitRecord hit) const {
-    // TODO: implement
+    return (hit.point - center);
 }
 
 /**

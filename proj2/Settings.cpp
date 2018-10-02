@@ -80,6 +80,14 @@ int SettingsNFF::readFile(std::string fname) {
             if (!(iss >> matr->Kd >> matr->Ks >> matr->shine >> matr->T >> matr->refIndx)) { return -1; }
             materials.push_back(matr);
         }
+        else if (tokens.at(0) == "l") { // light source
+            Vector3d pos;
+            // "l" X Y Z [R G B]
+            // l %g %g %g [%g %g %g]
+            // TODO: parse R G B (if provided)
+            if (!(iss >> tmp >> pos[0] >> pos[1] >> pos[2])) { return -1; }
+            lights.push_back(Light(pos));
+        }
         else if (tokens.at(0) == "s") {
             // "s" center.x center.y center.z radius
             // s %g %g %g %g
@@ -213,9 +221,15 @@ std::ostream& operator<<(std::ostream &sout, const SettingsNFF &nff) {
     sout << "(" << sphereCount << " spheres)" << endl;
 
     // print materials
-    sout << "\nALL MATERIALS:" << endl;
+    sout << "\nALL MATERIALS: (" << nff.materials.size() << ")" << endl;
     for (unsigned int i=0; i<nff.materials.size(); i++) {
         sout << *(nff.materials[i]) << endl;
+    }
+
+    // print lights
+    sout << "\nALL LIGHTS: (" << nff.lights.size() << ")" << endl;
+    for (unsigned int i=0; i<nff.lights.size(); i++) {
+        sout << nff.lights[i] << endl;
     }
     sout << "------------------\n";
     return sout;
@@ -230,5 +244,17 @@ std::ostream &operator<<(std::ostream &sout, const Material &matr) {
     sout << "  color: (" << matr.color[0] << ", " << matr.color[1] << ", " <<  matr.color[2] << ")" << endl;
     sout << "  Kd=" << matr.Kd << ", ks=" << matr.Ks << endl;
     sout << "  shine=" << matr.shine << ", T=" << matr.T << ", refIndx=" << matr.refIndx << endl;
+    return sout;
+}
+
+
+////////////////////////////
+//////// Light class: //////
+////////////////////////////
+// print out the NFF settings stored in this object for debugging
+std::ostream &operator<<(std::ostream &sout, const Light &light) {
+    sout << "Light:" << std::endl;
+    sout << "  at: (" << light.pos[0] << ", " << light.pos[1] << ", " <<  light.pos[2] << ")";
+    sout << ", color: (" << light.color[0] << ", " << light.color[1] << ", " <<  light.color[2] << ")" << endl;
     return sout;
 }
