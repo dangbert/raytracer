@@ -55,10 +55,14 @@ HitRecord Triangle::intersect(Ray ray, double d0, double d1, bool debug) const {
  * return the surface normal of this triangle at the given point
  * the normal of a triangle is same throughout the surface
  * (unless this is a triangle patch and we're doing phong shading)
- * TODO: add bool interpolate
  */
-Vector3d Triangle::getNormal(HitRecord hit) const {
+Vector3d Triangle::getNormal(HitRecord hit, bool interpolate) const {
+    // TODO: interpolating doesn't work yet
     // doesn't need hit param now, but will if we interpolate later
+    if (patch && interpolate) {
+        double a = 1.0; // TODO: is this right?
+        return a * n1 + hit.B * n2 + hit.g * n3;
+    }
     return (p2-p1).cross(p3-p2).normalized();
 }
 
@@ -97,7 +101,10 @@ Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch, std
 {
     // create triangle fan
     for (unsigned int i=2; i<vertices.size(); i++) {
-        triangles.push_back(Triangle(vertices[0], vertices[i-1], vertices[i]));
+        if (! patch)
+            triangles.push_back(Triangle(vertices[0], vertices[i-1], vertices[i], patch));
+        else
+            triangles.push_back(Triangle(vertices[0], vertices[i-1], vertices[i], patch, normals[0], normals[i-1], normals[i]));
     }
 }
 
@@ -133,12 +140,9 @@ HitRecord Polygon::intersect(Ray ray, double d0, double d1, bool debug) const {
  * where the given hit record is known to belong to this surface
  * and hit.t != -1
  */
-Vector3d Polygon::getNormal(HitRecord hit) const {
-    // TODO: if we are a polygon patch and want to interpolate the normal
-    //return triangles[hit.triIndex].getNormal(true);
-
+Vector3d Polygon::getNormal(HitRecord hit, bool interpolate) const {
     // return the .getNormal() of the triangle we intersected
-    return triangles[hit.triIndex].getNormal(hit);
+    return triangles[hit.triIndex].getNormal(hit, interpolate);
 }
 
 /**
@@ -223,7 +227,7 @@ HitRecord Sphere::intersect(Ray ray, double d0, double d1, bool debug) const {
  * where the given hit record is known to belong to this surface
  * and hit.t != -1
  */
-Vector3d Sphere::getNormal(HitRecord hit) const {
+Vector3d Sphere::getNormal(HitRecord hit, bool interpolate) const {
     return (hit.point - center);
 }
 

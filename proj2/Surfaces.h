@@ -29,7 +29,7 @@ class Triangle {
                 Vector3d n1=Vector3d(0,0,0), Vector3d n2=Vector3d(0,0,0), Vector3d n3=Vector3d(0,0,0))
             : p1(p1), p2(p2), p3(p3), patch(patch), n1(n1), n2(n2), n3(n3) {};
         HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
-        Vector3d getNormal(HitRecord hit) const;
+        Vector3d getNormal(HitRecord hit, bool interpolate=false) const;
         inline bool isPatch() {return patch;};
         friend std::ostream &operator<<(std::ostream &sout, const Triangle &tri);
    private:
@@ -55,7 +55,7 @@ class Surface {
         virtual ~Surface() {} // (needed so we can call delete on a *Surface)
         // TODO: consider adding params t0 and t1 (hither) to specify bounds
         virtual HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const = 0;
-        virtual Vector3d getNormal(HitRecord hit) const = 0;
+        virtual Vector3d getNormal(HitRecord hit, bool interpolate=false) const = 0;
 
      protected:
         Material *matr;         // material for this surface
@@ -72,7 +72,7 @@ class Polygon : public Surface {
     public:
         Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch=false, std::vector<Vector3d> normals=std::vector<Vector3d>());
         HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
-        Vector3d getNormal(HitRecord hit) const;
+        Vector3d getNormal(HitRecord hit, bool interpolate=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Polygon &poly);
         void printTriangles() const;
         inline bool isPatch() {return patch;};
@@ -93,7 +93,7 @@ class Sphere : public Surface {
         Sphere(Material *matr, Vector3d center, double radius)
             : Surface(matr), center(center), radius(radius) {};
         HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
-        Vector3d getNormal(HitRecord hit) const;
+        Vector3d getNormal(HitRecord hit, bool interpolate=false) const;
         friend std::ostream &operator<<(std::ostream &sout, const Sphere &sp);
 
      private:

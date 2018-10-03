@@ -148,6 +148,7 @@ void RayTracer::render(std::string filename, int bounces, bool debug) {
  * debug:   whether to print extra info for debugging
  */
 Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
+    bool interpolate = false; // TODO: interpolate normal doesn't work yet (leave false)
     HitRecord hit = getHitRecord(ray, nff.v_hither, -1, debug);
     if (hit.surfIndex == -1) // no intersection
         return nff.b_color;
@@ -173,7 +174,7 @@ Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
         if (getHitRecord(Ray(hit.point, L), SHADOW_BIAS, -1, debug).dist != -1)
             continue; // light isn't visible
 
-        N = nff.surfaces[hit.surfIndex]->getNormal(hit); // surface normal
+        N = nff.surfaces[hit.surfIndex]->getNormal(hit, interpolate); // surface normal
         H = (L + V) / (L+V).norm(); // unit vector from hit.point bisecting angle between L and v
         R = -V + 2*(V.dot(N)) * N;  // reflection direction
 
