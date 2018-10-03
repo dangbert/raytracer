@@ -121,7 +121,7 @@ void RayTracer::render(std::string filename, int bounces, bool debug) {
             // construct ray from camera through center of pixel
             Ray ray = Ray(nff.v_from, pos-nff.v_from);
             // get the color for this pixel
-            Vector3d color = trace(ray, bounces);
+            Vector3d color = trace(ray, nff.v_hither, -1, bounces, debug);
             // set color of pixel
             for (int k=0; k<3; k++) {
                 color[k] = min(max(color[k], 0.0), 1.0); // force value in range [0,1]
@@ -147,9 +147,9 @@ void RayTracer::render(std::string filename, int bounces, bool debug) {
  * bounces: number of times to reflect ray after first intersection
  * debug:   whether to print extra info for debugging
  */
-Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
+Vector3d RayTracer::trace(Ray ray, double d0, double d1, int bounces, bool debug) {
     bool interpolate = false; // TODO: interpolate normal doesn't work yet (leave false)
-    HitRecord hit = getHitRecord(ray, nff.v_hither, -1, debug);
+    HitRecord hit = getHitRecord(ray, d0, d1, debug);
     if (hit.surfIndex == -1) // no intersection
         return nff.b_color;
 
@@ -179,6 +179,7 @@ Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
         R = -V + 2*(V.dot(N)) * N;  // reflection direction
 
         // compute shading (diffuse and specular components)
+        // (see p.82 in textbook)
         double diffuse = max(0.0, N.dot(L));
         double specular = pow(max(0.0, N.dot(H)), matr->shine);
         for (int c=0; c<3; c++) {
@@ -186,7 +187,9 @@ Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
         }
     }
     if (bounces-1 > 0) {
-        localColor += matr->Ks * trace(Ray(hit.point, R), bounces-1);
+        // mirror reflection (see p.87 in textbook)
+        // TODO: figure out why I had to multiply R by -1
+        localColor += matr->Ks * trace(Ray(hit.point, R*-1), SHADOW_BIAS, d1, bounces-1);
     }
     return localColor;
 }

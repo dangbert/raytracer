@@ -4,6 +4,7 @@ Dan Engbert (end1@umbc.edu), CMSC 435 Fall 18
 * Simple Implementation of a ray tracer that reads [nff files](https://www.fileformat.info/format/nff/egff.htm)
 and renders an image of the 3D scene.
   * Supports polygons and spheres
+  * mirror reflection
   * Blinn-Phong diffuse and specular shading
   * shadows
 

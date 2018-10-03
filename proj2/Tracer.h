@@ -60,7 +60,7 @@ class RayTracer {
 
     private:
         SettingsNFF nff;
-        Eigen::Vector3d trace(Ray ray, int bounces=0, bool debug=false);
+        Eigen::Vector3d trace(Ray ray, double d0, double d1, int bounces=0, bool debug=false);
         HitRecord getHitRecord(Ray ray, double d0, double d1, bool debug);
 };
 #endif
