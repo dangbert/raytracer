@@ -29,8 +29,8 @@ int main(int argc, char *argv[]) {
     // create Ray Tracer using this nff file
     RayTracer rayT = RayTracer(filename);
 
+    rayT.render("out.ppm", 5, false);
     // render the image
-    rayT.render(tmp, 5, false);
     /*
     for (int i=0; i<5; i++) {
         string tmp = "";
@@ -42,6 +42,6 @@ int main(int argc, char *argv[]) {
     */
 
     // create animation
-    //rayT.animate("out/out", false);
+    //rayT.animate("out/out/frame", false);
     return 0;
 }

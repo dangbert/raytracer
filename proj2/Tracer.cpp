@@ -151,46 +151,35 @@ void RayTracer::render(std::string filename, int bounces, bool debug) {
  * debug:   whether to print extra info for debugging
  */
 Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
-    int closest = -1;  // index of closest Surface intersected by this ray
-    HitRecord bestHit(SurfaceType::POLYGON, -1); // record of the closest hit so far
-    for (unsigned int i=0; i<nff.surfaces.size(); i++) {
-        HitRecord hit = nff.surfaces[i]->intersect(ray, nff.v_hither, debug);
-
-        // check if we need to update bestHit
-        if (hit.dist != -1 && (bestHit.dist == -1 || hit.dist < bestHit.dist)) {
-            // we had our first intersection, or found a closer intersection
-            closest = i;
-            bestHit = hit;
-        }
-    }
-    if (bestHit.dist == -1) {
-        // ray didn't hit anything
+    HitRecord hit = getHitRecord(ray, debug);
+    if (hit.surfIndex == -1) // no intersection
         return nff.b_color;
-    }
 
     // ray intersected with an object
     //return matr->color; // if we're not doing any shading at all
     // TODO: if we add matr field to HitRecord, just use that...
-    Material *matr = nff.surfaces[closest]->matr;
-    Vector3d localColor = matr->color;
-    localColor = Vector3d(0,0,0); // for now
+    Material *matr = nff.surfaces[hit.surfIndex]->matr;
+    Vector3d localColor = Vector3d(0,0,0);
 
     // do shading:::
     // iterate over lights:
     Vector3d V, N, H, L, R;
     // unit vector from point of intersection to origin of ray
-    V = (bestHit.point - ray.eye).normalized();
+    V = (hit.point - ray.eye).normalized(); // TODO: should this always point at viewer???
+    //V = (hit.point - nff.v_from).normalized();
     double lightIntensity = 1.0 / sqrt(nff.lights.size());
     for (unsigned int i=0; i<nff.lights.size(); i++) {
         Light light = nff.lights[i];
-        // normal to surface at this point
-        N = nff.surfaces[closest]->getNormal(bestHit);
         // unit vector pointing at light from point of intersection on surface
-        L = (light.pos - bestHit.point).normalized();
-        // unit vector from point of intersection, bisecting the angle between L and v
-        H = (L + V) / (L+V).norm();
-        // reflection direction
-        R = -V + 2*(V.dot(N)) * N;
+        L = (light.pos - hit.point).normalized();
+        // check if light is visible (doing this creates shadows)
+        // TODO: use shadow bias
+        if (getHitRecord(Ray(hit.point, L), debug).dist != -1)
+            continue; // light isn't visible
+
+        N = nff.surfaces[hit.surfIndex]->getNormal(hit); // surface normal
+        H = (L + V) / (L+V).norm(); // unit vector from hit.point bisecting angle between L and v
+        R = -V + 2*(V.dot(N)) * N;  // reflection direction
 
         // compute shading (diffuse and specular components)
         double diffuse = max(0.0, N.dot(L));
@@ -200,9 +189,29 @@ Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
         }
     }
     if (bounces-1 > 0) {
-        localColor += matr->Ks * trace(Ray(bestHit.point, R), bounces-1);
+        localColor += matr->Ks * trace(Ray(hit.point, R), bounces-1);
     }
     return localColor;
+}
+
+/**
+ * get the hit record for this ray's intersection with a surface in the scene
+ * HitRecord surfIndex is set to -1 if there is no intersection
+ */
+// TODO: params t0, t1 (for all intersection functions as well)
+HitRecord RayTracer::getHitRecord(Ray ray, bool debug) {
+    HitRecord bestHit(SurfaceType::POLYGON, -1); // record of the closest hit so far
+    for (unsigned int i=0; i<nff.surfaces.size(); i++) {
+        HitRecord hit = nff.surfaces[i]->intersect(ray, nff.v_hither, debug);
+
+        // check if we need to update bestHit
+        if (hit.dist != -1 && (bestHit.dist == -1 || hit.dist < bestHit.dist)) {
+            // we had our first intersection, or found a closer intersection
+            bestHit = hit;
+            bestHit.surfIndex = i; // index of closest surface intersected by this ray
+        }
+    }
+    return bestHit;
 }
 
 /**
@@ -215,6 +224,7 @@ Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
  */
 void RayTracer::animate(std::string filename, bool debug) {
     int count = 0;
+    int bounces = 5;
     /*
     for (double h=0; h<10; h+=0.1) {
         std::string tmp = "";
@@ -262,7 +272,7 @@ void RayTracer::animate(std::string filename, bool debug) {
         nff.v_from = point;
 
         // create frame
-        render(tmp, debug);
+        render(tmp, bounces, debug);
         count++;
     }
 }

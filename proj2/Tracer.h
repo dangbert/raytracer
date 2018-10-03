@@ -34,8 +34,9 @@ class Ray {
 class HitRecord {
     friend class Test;
     public:
-        HitRecord(SurfaceType sType, double t, double dist=-1, Vector3d point=Vector3d(0,0,0), double B=0, double g=0, double triIndex=-1)
-            : sType(sType), t(t), dist(dist), point(point), B(B), g(g), triIndex(triIndex) {};
+        HitRecord(SurfaceType sType, double t, double dist=-1, Vector3d point=Vector3d(0,0,0), double B=0, double g=0, double triIndex=-1, double surfIndex=-1)
+            : sType(sType), t(t), dist(dist), point(point), B(B), g(g),
+            triIndex(triIndex), surfIndex(surfIndex) {};
         friend std::ostream &operator<<(std::ostream &sout, const HitRecord &hit);
 
         SurfaceType sType; // enum surface type
@@ -46,6 +47,7 @@ class HitRecord {
         double g;          // triangle intersectiong gamma value
         // TODO: store pointer to material intersected with?
         int triIndex;      // index of triangle intersected (if sTYPE == POLYGON)
+        int surfIndex;     // index of the surface intersected
 };
 
 class RayTracer {
@@ -58,5 +60,6 @@ class RayTracer {
     private:
         SettingsNFF nff;
         Eigen::Vector3d trace(Ray ray, int bounces=0, bool debug=false);
+        HitRecord getHitRecord(Ray ray, bool debug);
 };
 #endif
