@@ -2,8 +2,16 @@ Dan Engbert (end1@umbc.edu), CMSC 435 Fall 18
 
 # Project2
 * Simple Implementation of a ray tracer that reads [nff files](https://www.fileformat.info/format/nff/egff.htm)
-and renders an image of the 3D scene with shading.
-* Supports polygons and spheres
+and renders an image of the 3D scene.
+  * Supports polygons and spheres
+  * Blinn-Phong diffuse and specular shading
+  * shadows
+
+## How to Run:
+````bash
+make && ./proj2 <input.ppm>
+````
+(file will be written to ./out.ppm)
 
 ## HELP RECEIVED:
 * https://www.fileformat.info/format/nff/egff.htm

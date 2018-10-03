@@ -12,8 +12,10 @@ using std::endl;
 
 /*
  * returns HitRecord with info about intersection of the given Ray and this Triangle
+ * not an intersection unless t0 <= t <= t1
+ * (no upper bound if t1 is -1)
  */
-HitRecord Triangle::intersect(Ray ray, bool debug) const {
+HitRecord Triangle::intersect(Ray ray, double d0, double d1, bool debug) const {
     // ray: e + td
     // triangle a + B(b-a) + g(c-a)
     // solve system: Ax=b
@@ -37,9 +39,12 @@ HitRecord Triangle::intersect(Ray ray, bool debug) const {
     HitRecord hit(SurfaceType::TRIANGLE, -1);
     // check conditions to see if solution is valid
     if (t>0 && 0<=B && 0<=g && B+g<=1) {
-        Vector3d point = ray.eye + t * ray.dir;  // intersection point
-        double dist = (point - ray.eye).norm();  // actual distance (along ray) of intersection point
-        hit = HitRecord(SurfaceType::TRIANGLE, t, dist, point, B, g);
+        double dist = (t * ray.dir).norm();
+        if (d0 <= dist && (dist <= d1 || d1 == -1)) {
+            Vector3d point = ray.eye + t * ray.dir;  // intersection point
+            dist = (point - ray.eye).norm();
+            hit = HitRecord(SurfaceType::TRIANGLE, t, dist, point, B, g);
+        }
     }
     if (debug)
         cout << hit << endl;
@@ -104,23 +109,16 @@ Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch, std
  * hither:  ignore intersections that are closer than hither (-1 to disable)
  * debug:   whether or not to print out debug info for this intersection check
  */
-HitRecord Polygon::intersect(Ray ray, double hither, bool debug) const {
+HitRecord Polygon::intersect(Ray ray, double d0, double d1, bool debug) const {
     HitRecord bestHit = HitRecord(SurfaceType::POLYGON, -1);
 
     for (unsigned int i=0; i<triangles.size(); i++) {
         // check for intersection of ray with this triangle
-        HitRecord hit = triangles[i].intersect(ray, debug);
+        HitRecord hit = triangles[i].intersect(ray, d0, d1, debug);
 
         // check if we should update bestHit
         if (hit.t != -1 && (bestHit.t == -1 || hit.t < bestHit.t)) {
             // we hit a triangle for the first time, or a closer triangle
-            if (hither != -1 && hit.dist < hither) {
-                // don't count as intersection if it's closer than hither
-                if (debug) {
-                    cout << "\t(skipping result: " << hit.dist << " due to hither: " << hither << ")" << endl;
-                }
-                continue;
-            }
             // update bestHit
             hit.sType = SurfaceType::POLYGON;
             hit.triIndex = i;
@@ -179,7 +177,7 @@ std::ostream& operator<<(std::ostream &sout, const Polygon &poly) {
 ////////////////////////////
 /////// Sphere class: //////
 ////////////////////////////
-HitRecord Sphere::intersect(Ray ray, double hither, bool debug) const {
+HitRecord Sphere::intersect(Ray ray, double d0, double d1, bool debug) const {
     // based on p77 in textbook 
     HitRecord hit(SurfaceType::SPHERE, -1);
 
@@ -201,20 +199,22 @@ HitRecord Sphere::intersect(Ray ray, double hither, bool debug) const {
     else {
         // there are two solutions (where the ray enters and leaves)
 
-        // TODO: if hither cuts the sphere should we try using the larger solution?
+        // TODO: if d0 cuts the sphere should we try using the larger solution?
         // we would want the smaller of the two solutions
         double t1 = (numerator - sqrt(disc)) / denominator;   // the smaller solution
         //double t2 = (numerator + sqrt(disc)) / denominator;   // the larger solution
 
-        // distance of intersection point away from ray.eye
-        double realDist = (t1 * ray.dir).norm();
-        if (hither != -1 && realDist < hither) {
-            return hit; // doesn't count as intersection
-        }
         hit.t = t1;
     }
+
+    // distance of intersection point away from ray.eye
     hit.point = ray.eye + hit.t * ray.dir;   // intersection point
     hit.dist = (hit.point - ray.eye).norm(); // actual distance (along ray) of intersection point
+    if (! (d0 <= hit.dist && (hit.dist <= d1 || d1 == -1))) {
+        // outside range [d0, d1]
+        hit.t = -1;
+        hit.dist = -1;
+    }
     return hit;
 }
 

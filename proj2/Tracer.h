@@ -4,6 +4,7 @@
  * This file defines classes necessary for ray tracing
  * Dan Engbert - UMBC CMSC435 F18 Project 1
  */
+#define SHADOW_BIAS 1.0e-6
 
 #include <Eigen/Dense>
 #include "Settings.h"
@@ -60,6 +61,6 @@ class RayTracer {
     private:
         SettingsNFF nff;
         Eigen::Vector3d trace(Ray ray, int bounces=0, bool debug=false);
-        HitRecord getHitRecord(Ray ray, bool debug);
+        HitRecord getHitRecord(Ray ray, double d0, double d1, bool debug);
 };
 #endif

@@ -25,7 +25,7 @@ int Test::testAll() {
  */
 int Test::testPolygons() {
     cout << "\n---TESTING Polygon class:---" << endl;
-    bool debug=false;
+    bool debug = false;
     vector<Vector3d> vertices;
     vertices.push_back(Vector3d(0,0,5));
     vertices.push_back(Vector3d(3,0,5));
@@ -65,7 +65,7 @@ int Test::testPolygons() {
 int Test::testOnePolygon(Polygon poly, Ray ray, double hither, double expd, int testNum, bool debug) {
     if (debug)
         cout << "testing intersection of: " << ray << " and " << poly << endl;
-    HitRecord hit = poly.intersect(ray, hither, debug);
+    HitRecord hit = poly.intersect(ray, hither, -1, debug);
     cout << "test " << testNum << ": res = " << hit.dist << ", expd = " << expd << endl;
     if (hit.dist == expd) {
         cout << "[[test" << testNum << " PASSED]]\n" << endl;
@@ -78,7 +78,7 @@ int Test::testOnePolygon(Polygon poly, Ray ray, double hither, double expd, int 
 }
 
 int Test::testOneTriangle(Triangle tri, Ray ray, double expd, int testNum, bool debug) {
-    HitRecord hit = tri.intersect(ray, debug);
+    HitRecord hit = tri.intersect(ray, 0, -1, debug);
     cout << "test " << testNum << ": res = " << hit.dist << ", expd = " << expd << endl;
     if (hit.dist == expd) {
         cout << "[[test" << testNum << " PASSED]]\n" << endl;

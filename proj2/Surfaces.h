@@ -28,7 +28,7 @@ class Triangle {
         Triangle(Vector3d p1, Vector3d p2, Vector3d p3, bool patch=false,
                 Vector3d n1=Vector3d(0,0,0), Vector3d n2=Vector3d(0,0,0), Vector3d n3=Vector3d(0,0,0))
             : p1(p1), p2(p2), p3(p3), patch(patch), n1(n1), n2(n2), n3(n3) {};
-        HitRecord intersect(Ray ray, bool debug=false) const;
+        HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
         Vector3d getNormal(HitRecord hit) const;
         inline bool isPatch() {return patch;};
         friend std::ostream &operator<<(std::ostream &sout, const Triangle &tri);
@@ -54,7 +54,7 @@ class Surface {
         Surface(Material *matr) : matr(matr) {};
         virtual ~Surface() {} // (needed so we can call delete on a *Surface)
         // TODO: consider adding params t0 and t1 (hither) to specify bounds
-        virtual HitRecord intersect(Ray ray, double hither=-1, bool debug=false) const = 0;
+        virtual HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const = 0;
         virtual Vector3d getNormal(HitRecord hit) const = 0;
 
      protected:
@@ -71,7 +71,7 @@ class Polygon : public Surface {
     friend class Test;
     public:
         Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch=false, std::vector<Vector3d> normals=std::vector<Vector3d>());
-        HitRecord intersect(Ray ray, double hither=-1, bool debug=false) const;
+        HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
         Vector3d getNormal(HitRecord hit) const;
         friend std::ostream &operator<<(std::ostream &sout, const Polygon &poly);
         void printTriangles() const;
@@ -92,7 +92,7 @@ class Sphere : public Surface {
     public:
         Sphere(Material *matr, Vector3d center, double radius)
             : Surface(matr), center(center), radius(radius) {};
-        HitRecord intersect(Ray ray, double hither=-1, bool debug=false) const;
+        HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
         Vector3d getNormal(HitRecord hit) const;
         friend std::ostream &operator<<(std::ostream &sout, const Sphere &sp);
 

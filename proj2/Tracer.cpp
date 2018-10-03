@@ -26,7 +26,7 @@ std::ostream &operator<<(std::ostream &sout, const Ray &ray) {
  */
 std::ostream &operator<<(std::ostream &sout, const HitRecord &hit) {
     sout << "HitRecord: ";
-    sout << "sType=" << static_cast<std::underlying_type<SurfaceType>::type>(hit.sType) << ", t=" << hit.t;
+    sout << "sType=" << static_cast<std::underlying_type<SurfaceType>::type>(hit.sType) << ", t=" << hit.t << ", dist=" << hit.dist;
     if (hit.t != -1) {
         sout << ", point=" << "(" << hit.point[0] << "," << hit.point[1] << "," << hit.point[2] << ")";
         if (hit.sType == SurfaceType::TRIANGLE)
@@ -78,9 +78,6 @@ void RayTracer::render(std::string filename, int bounces, bool debug) {
     Vector3d w = (nff.v_from - nff.v_at).normalized();
     Vector3d u = nff.v_up.cross(w).normalized();
     Vector3d v = w.cross(u).normalized();
-    //w = Vector3d(0,0,-1);
-    //u = Vector3d(1,0,0);
-    //v = Vector3d(0,1,0);
 
     // distance from origin to center of virtual image plane
     double d = (nff.v_at - nff.v_from).norm();
@@ -151,7 +148,7 @@ void RayTracer::render(std::string filename, int bounces, bool debug) {
  * debug:   whether to print extra info for debugging
  */
 Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
-    HitRecord hit = getHitRecord(ray, debug);
+    HitRecord hit = getHitRecord(ray, nff.v_hither, -1, debug);
     if (hit.surfIndex == -1) // no intersection
         return nff.b_color;
 
@@ -173,8 +170,7 @@ Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
         // unit vector pointing at light from point of intersection on surface
         L = (light.pos - hit.point).normalized();
         // check if light is visible (doing this creates shadows)
-        // TODO: use shadow bias
-        if (getHitRecord(Ray(hit.point, L), debug).dist != -1)
+        if (getHitRecord(Ray(hit.point, L), SHADOW_BIAS, -1, debug).dist != -1)
             continue; // light isn't visible
 
         N = nff.surfaces[hit.surfIndex]->getNormal(hit); // surface normal
@@ -198,11 +194,10 @@ Vector3d RayTracer::trace(Ray ray, int bounces, bool debug) {
  * get the hit record for this ray's intersection with a surface in the scene
  * HitRecord surfIndex is set to -1 if there is no intersection
  */
-// TODO: params t0, t1 (for all intersection functions as well)
-HitRecord RayTracer::getHitRecord(Ray ray, bool debug) {
+HitRecord RayTracer::getHitRecord(Ray ray, double d0, double d1, bool debug) {
     HitRecord bestHit(SurfaceType::POLYGON, -1); // record of the closest hit so far
     for (unsigned int i=0; i<nff.surfaces.size(); i++) {
-        HitRecord hit = nff.surfaces[i]->intersect(ray, nff.v_hither, debug);
+        HitRecord hit = nff.surfaces[i]->intersect(ray, d0, d1, debug);
 
         // check if we need to update bestHit
         if (hit.dist != -1 && (bestHit.dist == -1 || hit.dist < bestHit.dist)) {
