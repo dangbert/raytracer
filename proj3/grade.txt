@@ -1,0 +1,36 @@
+  +--------------------------------------------------------+
+  |___   25          README comment or file                |
+  |      ___    1      Submitted a readme file             |
+  |      ___    5      Description of assignment           |
+  |      ___    2      Clean submission(no .o .d files)    |  
+  |      ___    2      Statement of help                   |
+  |      ___   10      Code Comments                       |
+  |      ___    5      Regular commits and log entries     |
+  +--------------------------------------------------------+
+  |___   20          Implementation                        |
+  |      ___   15      Compiles and executes w/o errors    |
+  |      ___    5      Written in C/C++;                   |
+  +--------------------------------------------------------+
+  |___   20          Input/output                          |
+  |      ___    5      Correctly parses nff file           |
+  |      ___    5      Outputs valid ppm image             |
+  |      ___   10      Outputs correct image               |
+  +--------------------------------------------------------+
+  |___   25         Vertex Processing                      |
+  |      ___   10     Local illumination                   |
+  |      ___   15     Transformation                       |
+  +--------------------------------------------------------+
+  |___   25         Rasterization                          |
+  |      ___   15     Pixel overlap calculation            |
+  |      ___   10     Attribute interpolation              |
+  +--------------------------------------------------------+
+  |___   10         Blending                               |
+  |      ___   10     Correct fragment                     |
+  +--------------------------------------------------------+
+  |___     25        (Ex) Clipping                         |
+  |___     15        (Ex) Fragment shading                 |
+  |___     25        (Ex) Shadow maps                      |
+  |___     15        (Ex) Transparency                     |
+  +--------------------------------------------------------+
+  |___               Total (of 125)                        |
+  +--------------------------------------------------------+
