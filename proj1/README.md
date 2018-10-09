@@ -3,13 +3,13 @@ Dan Engbert (end1@umbc.edu), CMSC 435 Fall 18
 # Project1
 * Simple Implementation of a ray tracer that reads [nff files](https://www.fileformat.info/format/nff/egff.htm)
 and renders an image of the 3D scene.
-* Only supports rendering polygons at the moment (skips any other object types)
-* No shading at the moment
+* Supports rendering polygons and spheres.
 
 ## HELP RECEIVED:
 * https://www.fileformat.info/format/nff/egff.htm
 * https://eigen.tuxfamily.org/dox/group__TutorialLinearAlgebra.html
 * Textbook: Fundamentals of Computer Graphics 3rd Edition
+
 
 ## PERSONAL NOTES:
 #### Debugging
