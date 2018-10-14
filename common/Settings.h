@@ -23,6 +23,7 @@ class Test;
 class Material {
     friend class SettingsNFF;
     friend class RayTracer;
+    friend class Rasterizer;
     friend class Test;
     private:
         Vector3d color;
@@ -40,6 +41,7 @@ class Material {
 class Light {
     friend class SettingsNFF;
     friend class RayTracer;
+    friend class Rasterizer;
     friend class Test;
     public:
         Light(Vector3d pos, Vector3d color=Vector3d(1,1,1))
@@ -55,6 +57,7 @@ class Light {
  */
 class SettingsNFF {
     friend class RayTracer;
+    friend class Rasterizer;
     friend class Test;
     public:
         SettingsNFF();

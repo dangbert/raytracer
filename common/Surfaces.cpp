@@ -57,10 +57,10 @@ HitRecord Triangle::intersect(Ray ray, double d0, double d1, bool debug) const {
  * (unless this is a triangle patch and we're doing phong shading)
  */
 Vector3d Triangle::getNormal(HitRecord hit, bool interpolate) const {
-    // TODO: interpolating doesn't work yet
-    // doesn't need hit param now, but will if we interpolate later
     if (patch && interpolate) {
-        double a = 1.0; // TODO: is this right?
+        // interpolate normal based on normal of the vertices
+        // (see p. 45 in textbook)
+        double a = 1.0 - hit.B - hit.g; // TODO: is this right?
         return a * n1 + hit.B * n2 + hit.g * n3;
     }
     return (p2-p1).cross(p3-p2).normalized();

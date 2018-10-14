@@ -2,7 +2,7 @@ CC = g++
 CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors -O2
 
 OUT = libgraphics.a
-OBJS = Tracer.o Settings.o Surfaces.o Test.o
+OBJS = Tracer.o Rasterizer.o Settings.o Surfaces.o Test.o
 DEPS = *.h
 INCLUDE = -I. -I/usr/include/eigen3/
 

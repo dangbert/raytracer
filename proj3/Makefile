@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors -O2
 
-NAME = proj2
+NAME = proj3
 INCLUDE = -I../common -I/usr/include/eigen3/
 
 
