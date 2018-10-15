@@ -14,6 +14,20 @@ using Eigen::Vector3d;
 // forward declaration
 class Test;
 
+struct RasterizerSettings {
+    Vector3d eye;
+    Vector3d w;
+    Vector3d u;
+    Vector3d v;
+    double h;
+    double right;
+    double left;
+    double top;
+    double bottom;
+    double near;
+    double far;
+};
+
 class Rasterizer {
     friend class Test;
     public:
@@ -21,7 +35,12 @@ class Rasterizer {
         void render(std::string filename, bool debug=false);
 
     private:
+        Eigen::Matrix4d createMatrix(bool debug=false);
+        void vertexProcessing(Eigen::Matrix4d M);
+        Vector3d shadePoint(Triangle &tri, int vertex, Material *matr);
+        HitRecord getHitRecord(Ray ray, double d0, double d1);
+        std::vector<Triangle> triangles;        // vector of all triangles in scene
         SettingsNFF nff;
-        Eigen::Matrix4d createMatrix(Vector3d u, Vector3d v, Vector3d w, bool debug=false);
+        struct RasterizerSettings scene;
 };
 #endif

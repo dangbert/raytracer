@@ -9,6 +9,37 @@ using std::endl;
 ////////////////////////////
 ///// Triangle class: //////
 ////////////////////////////
+/**
+ * constuct a Triangle object
+ *
+ * vertices: array of 3 vertices (Vector3d objects) for this triangle
+ * matr:     pointer to material for this triangle
+ */
+
+Triangle::Triangle(Vector3d points[3], Material *matr)
+    : Surface(matr), patch(false)
+{
+    for (int i=0; i<3; i++) {
+        this->points[i] = points[i];
+        this->norms[i] = Vector3d(0,0,0);
+    }
+}
+
+/**
+ * constructs a Triangle (patch) object (a triangle where the normals of the vertices are known)
+ *
+ * vertices: array of 3 vertices (Vector3d objects) for this triangle
+ * matr:     pointer to material for this triangle
+ * norms:    normals of the triangles vertices
+ */
+Triangle::Triangle(Vector3d points[3], Vector3d norms[3], Material *matr)
+    : Surface(matr), patch(true)
+{
+    for (int i=0; i<3; i++) {
+        this->points[i] = points[i];
+        this->norms[i] = norms[i];
+    }
+}
 
 /*
  * returns HitRecord with info about intersection of the given Ray and this Triangle
@@ -25,12 +56,12 @@ HitRecord Triangle::intersect(Ray ray, double d0, double d1, bool debug) const {
 
     Eigen::Matrix3d A, M1, M2, M3;
     Vector3d b;
-    A << p1-p2, p1-p3, ray.dir;
+    A << points[0]-points[1], points[0]-points[2], ray.dir;
 
     // TODO: check matrices have determinants?
-    M1 << p1-ray.eye, p1-p3, ray.dir;
-    M2 << p1-p2, p1-ray.eye, ray.dir;
-    M3 << p1-p2, p1-p3, p1-ray.eye;
+    M1 << points[0]-ray.eye, points[0]-points[2], ray.dir;
+    M2 << points[0]-points[1], points[0]-ray.eye, ray.dir;
+    M3 << points[0]-points[1], points[0]-points[2], points[0]-ray.eye;
     double det = A.determinant();
     double B = M1.determinant() / det;
     double g = M2.determinant() / det;
@@ -61,9 +92,9 @@ Vector3d Triangle::getNormal(HitRecord hit, bool interpolate) const {
         // interpolate normal based on normal of the vertices
         // (see p. 45 in textbook)
         double a = 1.0 - hit.B - hit.g; // TODO: is this right?
-        return a * n1 + hit.B * n2 + hit.g * n3;
+        return a * norms[0] + hit.B * norms[1] + hit.g * norms[2];
     }
-    return (p2-p1).cross(p3-p2).normalized();
+    return (points[1]-points[0]).cross(points[2]-points[1]).normalized();
 }
 
 /**
@@ -71,15 +102,15 @@ Vector3d Triangle::getNormal(HitRecord hit, bool interpolate) const {
  */
 std::ostream &operator<<(std::ostream &sout, const Triangle &tri) {
     sout << "Triangle: ";
-    sout << "(" << tri.p1[0] << "," << tri.p1[1] << "," << tri.p1[2] << ")" << endl;
+    sout << "(" << tri.points[0][0] << "," << tri.points[0][1] << "," << tri.points[0][2] << ")" << endl;
     if (tri.patch)
-        sout << "normal: (" << tri.n1[0] << "," << tri.n1[1] << "," << tri.n1[2] << ")" << endl;
-    sout << "(" << tri.p2[0] << "," << tri.p2[1] << "," << tri.p2[2] << ")" << endl;
+        sout << "normal: (" << tri.norms[0][0] << "," << tri.norms[0][1] << "," << tri.norms[0][2] << ")" << endl;
+    sout << "(" << tri.points[1][0] << "," << tri.points[1][1] << "," << tri.points[1][2] << ")" << endl;
     if (tri.patch)
-        sout << "normal: (" << tri.n2[0] << "," << tri.n2[1] << "," << tri.n2[2] << ")" << endl;
-    sout << "(" << tri.p3[0] << "," << tri.p3[1] << "," << tri.p3[2] << ")" << endl;
+        sout << "normal: (" << tri.norms[1][0] << "," << tri.norms[1][1] << "," << tri.norms[1][2] << ")" << endl;
+    sout << "(" << tri.points[2][0] << "," << tri.points[2][1] << "," << tri.points[2][2] << ")" << endl;
     if (tri.patch)
-        sout << "normal: (" << tri.n3[0] << "," << tri.n3[1] << "," << tri.n3[2] << ")" << endl;
+        sout << "normal: (" << tri.norms[2][0] << "," << tri.norms[2][1] << "," << tri.norms[2][2] << ")" << endl;
     return sout;
 }
 
@@ -101,10 +132,14 @@ Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch, std
 {
     // create triangle fan
     for (unsigned int i=2; i<vertices.size(); i++) {
-        if (! patch)
-            triangles.push_back(Triangle(vertices[0], vertices[i-1], vertices[i], patch));
-        else
-            triangles.push_back(Triangle(vertices[0], vertices[i-1], vertices[i], patch, normals[0], normals[i-1], normals[i]));
+        Vector3d points[3] = {vertices[0], vertices[i-1], vertices[i]};
+        if (!patch) {
+            triangles.push_back(Triangle(points, matr));
+        }
+        else {
+            Vector3d norms[3] = {normals[0], norms[i-1], norms[i]};
+            triangles.push_back(Triangle(points, norms, matr));
+        }
     }
 }
 

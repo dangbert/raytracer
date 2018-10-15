@@ -15,41 +15,17 @@ using Eigen::Vector3d;
 // forward delcaration
 class Ray;
 class Test;
+class Rasterizer;
 class HitRecord;
-
-/**
- *  class to represent a triangle in 3D space
- *  a triangle patch is a triangle where the normals of the surface at each vertex are known.
- * TODO TODO: consider making this a child of Surface (storing an extra Material* is not inefficient)
- */
-class Triangle {
-    friend class Test;
-    public:
-        Triangle(Vector3d p1, Vector3d p2, Vector3d p3, bool patch=false,
-                Vector3d n1=Vector3d(0,0,0), Vector3d n2=Vector3d(0,0,0), Vector3d n3=Vector3d(0,0,0))
-            : p1(p1), p2(p2), p3(p3), patch(patch), n1(n1), n2(n2), n3(n3) {};
-        HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
-        Vector3d getNormal(HitRecord hit, bool interpolate=false) const;
-        inline bool isPatch() {return patch;};
-        friend std::ostream &operator<<(std::ostream &sout, const Triangle &tri);
-   private:
-        // vertices of triangle in 3D space
-        Vector3d p1;
-        Vector3d p2;
-        Vector3d p3;
-        bool patch;
-        Vector3d n1;
-        Vector3d n2;
-        Vector3d n3;
-};
 
 /**
  *  class for geometric surfaces to derive from
  *  a surface should not be modified after creating it
  */
 class Surface {
-    friend class RayTracer;
     friend class Test;
+    friend class RayTracer;
+    friend class Rasterizer;
     public:
         Surface(Material *matr) : matr(matr) {};
         virtual ~Surface() {} // (needed so we can call delete on a *Surface)
@@ -62,6 +38,28 @@ class Surface {
 };
 
 /**
+ *  class to represent a triangle in 3D space
+ *  a triangle patch is a triangle where the normals of the surface at each vertex are known.
+ */
+class Triangle : public Surface {
+    friend class Test;
+    friend class Rasterizer;
+    public:
+        Triangle(Vector3d points[3], Material *matr=NULL);
+        Triangle(Vector3d points[3], Vector3d norms[3], Material *matr=NULL);
+        HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
+        Vector3d getNormal(HitRecord hit, bool interpolate=false) const;
+        inline bool isPatch() {return patch;};
+        friend std::ostream &operator<<(std::ostream &sout, const Triangle &tri);
+   private:
+        Vector3d points[3]; // vertices of triangle in 3D space
+        bool patch;         // whether or not the normals at the vertices are known
+        Vector3d norms[3];  // normal at each vertex (not used if patch==true)
+        Vector3d colors[3]; // color of each vertex (for rasterization)
+        Vector3d imgPoints[3]; // vertices of triangle in image space (for rasterization)
+};
+
+/**
  *  class to represent a polygon in 3D space
  *  only works for convex polygons at the moment
  *
@@ -69,6 +67,7 @@ class Surface {
  */
 class Polygon : public Surface {
     friend class Test;
+    friend class Rasterizer;
     public:
         Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch=false, std::vector<Vector3d> normals=std::vector<Vector3d>());
         HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;

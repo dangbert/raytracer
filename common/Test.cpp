@@ -95,7 +95,8 @@ int Test::testTriangles() {
     int count = 0; // number of tests performed so far
     bool debug = true;
     cout << "\n---TESTING Triangle class:---" << endl;
-    Triangle tri = Triangle(Vector3d(0,0,5), Vector3d(4,0,5), Vector3d(5,2,5));
+    Vector3d points[3] = {Vector3d(0,0,5), Vector3d(4,0,5), Vector3d(5,2,5)};
+    Triangle tri = Triangle(points);
     Ray ray = Ray(Vector3d(2,0,0), Vector3d(0,0,5));
 
     // shoot ray at first vertex (from origin)
