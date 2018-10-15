@@ -66,6 +66,7 @@ HitRecord Triangle::intersect(Ray ray, double d0, double d1, bool debug) const {
     double B = M1.determinant() / det;
     double g = M2.determinant() / det;
     double t = M3.determinant() / det;
+    double a = 1.0 - B - g; // TODO: is this right?
 
     HitRecord hit(SurfaceType::TRIANGLE, -1);
     // check conditions to see if solution is valid
@@ -74,7 +75,7 @@ HitRecord Triangle::intersect(Ray ray, double d0, double d1, bool debug) const {
         if (d0 <= dist && (dist <= d1 || d1 == -1)) {
             Vector3d point = ray.eye + t * ray.dir;  // intersection point
             dist = (point - ray.eye).norm();
-            hit = HitRecord(SurfaceType::TRIANGLE, t, dist, point, B, g);
+            hit = HitRecord(SurfaceType::TRIANGLE, t, dist, point, a, B, g);
         }
     }
     if (debug)
@@ -91,8 +92,7 @@ Vector3d Triangle::getNormal(HitRecord hit, bool interpolate) const {
     if (patch && interpolate) {
         // interpolate normal based on normal of the vertices
         // (see p. 45 in textbook)
-        double a = 1.0 - hit.B - hit.g; // TODO: is this right?
-        return a * norms[0] + hit.B * norms[1] + hit.g * norms[2];
+        return hit.a * norms[0] + hit.B * norms[1] + hit.g * norms[2];
     }
     return (points[1]-points[0]).cross(points[2]-points[1]).normalized();
 }

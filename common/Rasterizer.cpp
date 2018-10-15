@@ -44,64 +44,54 @@ Rasterizer::Rasterizer(std::string filename) {
  */
 void Rasterizer::render(std::string filename, bool debug) {
     cout << "\nrasterizing..." << endl;
-    // vector of all triangles in scene
-    triangles.clear();
     if (debug) {
         cout << nff << endl;
     }
 
-    // build matrix to apply to each vertex
-    Eigen::Matrix4d M = createMatrix(debug);
-
-    // vertex processing
-    vertexProcessing(M);
-    cout << "there are " << triangles.size() << " triangles" << endl;
-
-    return;
-
-    // image of pixel values
+    // create image of pixel values
     const int HEIGHT = nff.v_resolution[1];
     const int WIDTH = nff.v_resolution[0];
     // allocate contiguous bytes for storing pixel color values
     unsigned char* pixels = new unsigned char[HEIGHT*WIDTH*3];
-    // depth value for each pixel (zBuffer)
-    ///unsigned char* zBuffer = new unsigned char[HEIGHT*WIDTH];
-    //for (int i=0; i<HEIGHT*WIDTH; i++) {
-    //    zBuffer[i] = far;
-    //}
-
-
-    /*
-    // iterate over all pixels in the image ((0,0) is the top left corner pixel)
+    // 2D array containing a linked lists of fragments for each pixel
+    struct Fragment ***frags = new Fragment**[HEIGHT];
     for (int j=0; j<HEIGHT; j++) {      // iterate over rows
+        frags[j] = new Fragment*[WIDTH];
         for (int i=0; i<WIDTH; i++) {   // iterate over columns
-            // (i,j) is the current pixel (in image coordinates)
-            // center of this pixel (in camera coordinates)
-            double x = initX + deltaX*i;
-            double y = initY - deltaX*j;
-            double z = -(nff.v_from - nff.v_at).norm();
-            // transform (center of this pixel) camera coordinates -> world coordinates
-            Vector3d pos = x*u + y*v + z*w + nff.v_from;
-
-            // construct ray from camera through center of pixel
-            Ray ray = Ray(nff.v_from, pos-nff.v_from);
-            // get the color for this pixel
-            Vector3d color = trace(ray, nff.v_hither, -1, bounces, debug);
-            // set color of pixel
-            for (int k=0; k<3; k++) {
-                color[k] = min(max(color[k], 0.0), 1.0); // force value in range [0,1]
-                pixels[j*(WIDTH*3) + (i*3) + k] = (int) (color[k] * 255);
-            }
+            frags[j][i] = NULL;
         }
     }
-    */
+
+    Eigen::Matrix4d M = createMatrix(debug);    // build matrix to apply to each vertex
+    vertexProcessing(M);                        // vertex processing
+    cout << "there are " << triangles.size() << " triangles" << endl;
+
+    rasterization(frags);                       // rasterization
+    fragmentProcessing(frags);                  // fragment processing
+    blending(pixels, frags);                    // blending
 
     // write image to file
     FILE *f = fopen(filename.c_str(), "wb");
     fprintf(f, "P6\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
     fwrite(pixels, 1, HEIGHT*WIDTH*3, f);
     fclose(f);
+
+    // free up memory
     delete[] pixels;
+    struct Fragment *cur, *next;
+    for (int j=0; j<HEIGHT; j++) {      // iterate over rows
+        for (int i=0; i<WIDTH; i++) {   // iterate over columns
+            cur = frags[j][i];
+            if (cur == NULL)
+                continue;
+            next = cur->next;
+            while (cur != NULL) {
+                delete cur;
+                cur = next;
+                next = cur->next;
+            }
+        }
+    }
     cout << "image written to " << filename << endl;
 }
 
@@ -148,6 +138,7 @@ Eigen::Matrix4d Rasterizer::createMatrix(bool debug) {
  * and stores them in a vector and transforms them using matrix M
  */
 void Rasterizer::vertexProcessing(Eigen::Matrix4d M) {
+    triangles.clear(); // vector of all triangles in scene
     // break all polygons down into triangle and store them in a vector
     for (unsigned int i=0; i<nff.surfaces.size(); i++) {
         Polygon *poly = dynamic_cast<Polygon*>(nff.surfaces[i]);
@@ -165,22 +156,17 @@ void Rasterizer::vertexProcessing(Eigen::Matrix4d M) {
         // are the transformed triangles in 2D space???
         for (int c=0; c<3; c++) {
             // do shading on this vertex in world space (no reflection or shadows)
-            // TODO:
+            triangles[i].colors[c] = shadePoint(triangles[i], c);
 
+            // transform vertices from world space -> image space
             Eigen::Vector4d tmp;
             tmp << triangles[i].points[c], 1;
             tmp = M * tmp;
             // TODO: wait to do the homogenous divide until after clipping (if I do clipping)
             tmp = tmp / tmp[3];
-            triangles[i].points[c] = Vector3d(tmp[0]/tmp[3], tmp[1]/tmp[3], tmp[2]/tmp[3]);
-
-            // is the z coordinate the z buffer???
-            // if not a patch then triangle->getNormal() will give the normal in
-            // the new coordinate space?
-            //if (triangles[i].isPatch()) {
-            //    tmp = M * *(norms[c]);
-            //    *(norms[c]) = Vector3d(tmp[0]/tmp[3], tmp[1]/tmp[3], tmp[2]/tmp[3]);
-            //}
+            // store the image points (but keep the world space points around)
+            // the z coordinate of each imgPoint will be used for depth later
+            triangles[i].imgPoints[c] = Vector3d(tmp[0]/tmp[3], tmp[1]/tmp[3], tmp[2]/tmp[3]);
         }
     }
 }
@@ -191,7 +177,7 @@ void Rasterizer::vertexProcessing(Eigen::Matrix4d M) {
  *
  * based on RayTracer::trace()
  */
-Vector3d Rasterizer::shadePoint(Triangle &tri, int vertex, Material *matr) {
+Vector3d Rasterizer::shadePoint(Triangle &tri, int vertex) {
     Vector3d color = Vector3d(0,0,0);
     Vector3d point = tri.points[vertex];  // point being shaded
 
@@ -205,9 +191,9 @@ Vector3d Rasterizer::shadePoint(Triangle &tri, int vertex, Material *matr) {
         // unit vector pointing at light from point
         L = (light.pos - point).normalized();
         // check if light is visible (doing this creates shadows)
-        // TODO: do I need to change this?
-        if (getHitRecord(Ray(point, L), SHADOW_BIAS, -1).dist != -1)
-            continue; // light isn't visible
+        // TODO: do I just leave this out for rasterization without shadows???
+        //if (getHitRecord(Ray(point, L), SHADOW_BIAS, -1).dist != -1)
+        //    continue; // light isn't visible
 
         if (tri.isPatch()) {
             N = tri.norms[vertex];    // surface normal
@@ -223,10 +209,14 @@ Vector3d Rasterizer::shadePoint(Triangle &tri, int vertex, Material *matr) {
         // compute shading (diffuse and specular components)
         // (see p.82 in textbook)
         double diffuse = max(0.0, N.dot(L));
-        double specular = pow(max(0.0, N.dot(H)), matr->shine);
+        double specular = pow(max(0.0, N.dot(H)), tri.matr->shine);
         for (int c=0; c<3; c++) {
-            color[c] += (matr->Kd * matr->color[c] * diffuse + matr->Ks * specular) * lightIntensity;
+            color[c] += (tri.matr->Kd * tri.matr->color[c] * diffuse + tri.matr->Ks * specular) * lightIntensity;
         }
+    }
+    // force colors in range [0,1]
+    for (int c=0; c<3; c++) {
+        color[c] = min(max(color[c], 0.0), 1.0);
     }
     return color;
 }
@@ -237,6 +227,7 @@ Vector3d Rasterizer::shadePoint(Triangle &tri, int vertex, Material *matr) {
  * HitRecord surfIndex is set to -1 if there is no intersection
  *
  * based on RayTracer::getHitRecord()
+ * TODO: delete this function if I don't need it (if not doing shadows)
  */
 HitRecord Rasterizer::getHitRecord(Ray ray, double d0, double d1) {
     HitRecord bestHit(SurfaceType::POLYGON, -1); // record of the closest hit so far
@@ -252,4 +243,105 @@ HitRecord Rasterizer::getHitRecord(Ray ray, double d0, double d1) {
         }
     }
     return bestHit;
+}
+
+/**
+ *
+ */
+void Rasterizer::rasterization(struct Fragment ***frags) {
+    for (unsigned int i=0; i<triangles.size(); i++) {
+        Triangle &tri = triangles[i];
+
+        // compute 2D bounding box of this triangle
+        //double minX=DBL_MAX, maxX=-DBL_MIN, minY=DBL_MAX, maxY=-DBL_MAX;
+        double minX=tri.points[0][0], maxX=minX, minY=tri.points[0][1], maxY=minY;
+        for (int c=1; c<3; c++) {
+            if (tri.points[c][0] < minX)
+                minX = tri.points[c][0];
+            if (tri.points[c][0] > maxX)
+                maxX = tri.points[c][0];
+
+            if (tri.points[c][1] < minY)
+                minY = tri.points[c][1];
+            if (tri.points[c][1] > maxY)
+                maxY = tri.points[c][1];
+        }
+
+        // iterate over pixels in bounding box (with corners (minX,minY) and (maxX,maxY))
+        // (x,y) are the coordinates of the center of a (1x1) pixel
+        for (int y=floor(minY); y<=ceil(maxY); y++) {
+            for (int x=floor(minX); x<=ceil(maxX); x++) {
+                // check if point (x,y) lines inside the 2D triangle formed by tri.imgPoints (ignoring the z component of each):
+
+                // construct a triangle using tri.imgPoints as vertices, but set z values to 0
+                Vector3d points[3] = {tri.imgPoints[0], tri.imgPoints[1], tri.imgPoints[2]};
+                ///Vector3d normals[3] = {tri.norms[0], tri.norms[1], tri.norms[2]};
+                for (int c=0; c<3; c++) {
+                    tri.points[c][2] = 0;
+                }
+                ///Triangle tmp(points, normals);
+                // check if a ray from (0,0,0) -> (x,y,0) would hit this new triangle
+                HitRecord hit = Triangle(points).intersect(Ray(Vector3d(0,0,0), Vector3d(x, y, 0)));
+                if (hit.t == -1)
+                    continue; // (x,y) is not on the triangle
+                // TODO: check hit.a, hit.B, hit.g here to check if point is on triangle edge so we can deal with cracks (holes)
+                // store info about this point on the triangle (for computing this pixel's color later)
+                struct Fragment *frag = new struct Fragment;
+                // interpolate normal, color, and zValue at this point:
+                frag->normal = hit.a * tri.norms[0] + hit.B * tri.norms[1] + hit.g * tri.norms[2];
+                frag->color = hit.a * tri.colors[0] + hit.B * tri.norms[1] + hit.g * tri.norms[2];
+                frag->zValue = hit.a * tri.points[0][2] + hit.B * tri.points[1][2] + hit.g * tri.points[2][2];
+                // interpolate world position of intersection point:
+                frag->worldPos = hit.a * tri.points[0] + hit.B * tri.points[1] + hit.g * tri.points[2];
+                frag->next = NULL;
+
+                // store frag at front of linked list for this pixel
+                if (frags[y][x] == NULL) {
+                    frags[y][x] = frag;
+                }
+                else {
+                    frag->next = frags[y][x];
+                    frags[y][x] = frag;
+                }
+            }
+
+        }
+
+    }
+
+}
+
+void Rasterizer::fragmentProcessing(struct Fragment ***frags) {
+    // TODO: implement if desired
+}
+
+void Rasterizer::blending(unsigned char* pixels, struct Fragment ***frags) {
+    const int HEIGHT = nff.v_resolution[1];
+    const int WIDTH = nff.v_resolution[0];
+    // iterate over all pixels in the image ((0,0) is the top left corner pixel)
+    for (int j=0; j<HEIGHT; j++) {      // iterate over rows
+        for (int i=0; i<WIDTH; i++) {   // iterate over columns
+            // (i,j) is the current pixel (in image coordinates)
+            // determine the color for this pixel:
+            Vector3d color = nff.b_color;
+
+            if (frags[j][i] != NULL) {
+                Fragment *best=frags[j][i], *cur=best;
+                while (cur != NULL) {
+                    if (cur->zValue < best->zValue) {
+                        best = cur;
+                    }
+                    cur = cur->next;
+                }
+                color = best->color;
+                cout << "set a best color" << endl;
+            }
+
+            // set color of pixel
+            for (int k=0; k<3; k++) {
+                color[k] = min(max(color[k], 0.0), 1.0); // force value in range [0,1]
+                pixels[j*(WIDTH*3) + (i*3) + k] = (int) (color[k] * 255);
+            }
+        }
+    }
 }

@@ -14,18 +14,29 @@ using Eigen::Vector3d;
 // forward declaration
 class Test;
 
+// stores info about the Rasterization setup
 struct RasterizerSettings {
-    Vector3d eye;
+    Vector3d eye; // camera origin
+    // vectors defining camera space:
     Vector3d w;
     Vector3d u;
     Vector3d v;
     double h;
-    double right;
+    // planes of view frustum:
+    double right; // right plane
     double left;
     double top;
     double bottom;
-    double near;
+    double near;  // near plane
     double far;
+};
+
+struct Fragment {
+    double zValue;     // interpolated zValue (used ONLY for depth ordering)
+    Vector3d color;    // interpolated color
+    Vector3d normal;   // interpolated, in world space
+    Vector3d worldPos; // position in world space
+    struct Fragment *next;
 };
 
 class Rasterizer {
@@ -37,8 +48,12 @@ class Rasterizer {
     private:
         Eigen::Matrix4d createMatrix(bool debug=false);
         void vertexProcessing(Eigen::Matrix4d M);
-        Vector3d shadePoint(Triangle &tri, int vertex, Material *matr);
+        Vector3d shadePoint(Triangle &tri, int vertex);
         HitRecord getHitRecord(Ray ray, double d0, double d1);
+        void rasterization(struct Fragment ***frags);
+        void fragmentProcessing(struct Fragment ***frags);
+        void blending(unsigned char* pixels, struct Fragment ***frags);
+
         std::vector<Triangle> triangles;        // vector of all triangles in scene
         SettingsNFF nff;
         struct RasterizerSettings scene;

@@ -35,8 +35,8 @@ class Ray {
 class HitRecord {
     friend class Test;
     public:
-        HitRecord(SurfaceType sType, double t, double dist=-1, Vector3d point=Vector3d(0,0,0), double B=0, double g=0, double triIndex=-1, double surfIndex=-1)
-            : sType(sType), t(t), dist(dist), point(point), B(B), g(g),
+        HitRecord(SurfaceType sType, double t, double dist=-1, Vector3d point=Vector3d(0,0,0), double a=0, double B=0, double g=0, double triIndex=-1, double surfIndex=-1)
+            : sType(sType), t(t), dist(dist), point(point), a(a), B(B), g(g),
             triIndex(triIndex), surfIndex(surfIndex) {};
         friend std::ostream &operator<<(std::ostream &sout, const HitRecord &hit);
 
@@ -44,6 +44,7 @@ class HitRecord {
         double t;          // t value for intersection along ray (-1 if no intersection)
         double dist;       // actual distance along ray of intersection (calculated with t)
         Vector3d point;    // intersection point
+        double a;          // triangle intersection alpha value
         double B;          // triangle intersection Beta value
         double g;          // triangle intersectiong gamma value
         // TODO: store pointer to material intersected with?
