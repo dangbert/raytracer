@@ -1,6 +1,7 @@
 *~
 *.o
 *.d
+*.a
 *.ppm
 *.png
 hide
