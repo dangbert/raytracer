@@ -12,12 +12,6 @@ void runRasterizer(std::string filename);
 
 // my driver
 int main(int argc, char *argv[]) {
-    /*
-    // test my code
-    Test test;
-    test.testAll();
-    return 0;
-    */
 
     // parse args
     if (argc != 2) {
@@ -25,8 +19,16 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     string filename = argv[1];
-    runRasterizer(filename);
+    // test my code
+    /*
+    Test test;
+    test.testRasterizer(filename);
+    //test.testAll();
+    return 0;
+    */
 
+
+    runRasterizer(filename);
     return 0;
 }
 

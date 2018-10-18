@@ -15,5 +15,6 @@ class Test {
         int testTriangles();
         int testOnePolygon(Polygon poly, Ray ray, double hither, double expd, int testNum, bool debug=false);
         int testOneTriangle(Triangle tri, Ray ray, double expected, int testNum, bool debug=false);
+        int testRasterizer(std::string filename);
 };
 #endif

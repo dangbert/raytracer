@@ -15,4 +15,4 @@ clean:
 
 .PHONY: run
 run:
-	make && ./$(NAME) inputs/teapot-3.nff && display out.ppm
+	rm -f proj3 && make && ./$(NAME) inputs/teapot-3.nff && display out.ppm

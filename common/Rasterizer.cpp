@@ -2,6 +2,7 @@
 #include "Rasterizer.h"
 #include <assert.h>
 #include <math.h>
+#include <iomanip>
 using namespace std;
 
 ////////////////////////////
@@ -54,7 +55,7 @@ void Rasterizer::render(std::string filename, bool debug) {
     // allocate contiguous bytes for storing pixel color values
     unsigned char* pixels = new unsigned char[HEIGHT*WIDTH*3];
     // 2D array containing a linked lists of fragments for each pixel
-    struct Fragment ***frags = new Fragment**[HEIGHT];
+    Fragment ***frags = new Fragment**[HEIGHT];
     for (int j=0; j<HEIGHT; j++) {      // iterate over rows
         frags[j] = new Fragment*[WIDTH];
         for (int i=0; i<WIDTH; i++) {   // iterate over columns
@@ -78,17 +79,16 @@ void Rasterizer::render(std::string filename, bool debug) {
 
     // free up memory
     delete[] pixels;
-    struct Fragment *cur, *next;
+    Fragment *cur, *next;
     for (int j=0; j<HEIGHT; j++) {      // iterate over rows
         for (int i=0; i<WIDTH; i++) {   // iterate over columns
             cur = frags[j][i];
             if (cur == NULL)
                 continue;
-            next = cur->next;
             while (cur != NULL) {
+                next = cur->next;
                 delete cur;
                 cur = next;
-                next = cur->next;
             }
         }
     }
@@ -152,21 +152,22 @@ void Rasterizer::vertexProcessing(Eigen::Matrix4d M) {
     // compute shading for each vertex of the triangle (while in world space)
     // apply matrix to vertices in each triangle (world space -> image space)
     for (unsigned int i=0; i<triangles.size(); i++) {
-        // TODO: what to do with w coordinate?
-        // are the transformed triangles in 2D space???
+        Triangle &tri = triangles[i];           // current triangle
         for (int c=0; c<3; c++) {
-            // do shading on this vertex in world space (no reflection or shadows)
-            triangles[i].colors[c] = shadePoint(triangles[i], c);
+            // do shading on current vertex in world space (no reflection or shadows)
+            tri.colors[c] = shadePoint(tri, c);
 
             // transform vertices from world space -> image space
             Eigen::Vector4d tmp;
-            tmp << triangles[i].points[c], 1;
-            tmp = M * tmp;
-            // TODO: wait to do the homogenous divide until after clipping (if I do clipping)
+            tmp << tri.points[c], 1;
+            ///printf("mapped point (%g,%g,%g, %g)", tmp[0], tmp[1], tmp[2], tmp[3]); cout << std::setw(25);
+            tmp = M * tmp; // map this point to image coordinates
+            // TODO: consider waiting to do the homogenous divide until after clipping (if I do clipping)
             tmp = tmp / tmp[3];
             // store the image points (but keep the world space points around)
-            // the z coordinate of each imgPoint will be used for depth later
-            triangles[i].imgPoints[c] = Vector3d(tmp[0]/tmp[3], tmp[1]/tmp[3], tmp[2]/tmp[3]);
+            // (the z coordinate of each imgPoint will be used for depth ordering later)
+            tri.imgPoints[c] = Vector3d(tmp[0], tmp[1], tmp[2]);
+            ///printf("-> (%g,%g,%g, %g)\n", tmp[0], tmp[1], tmp[2], tmp[3]);
         }
     }
 }
@@ -249,53 +250,53 @@ HitRecord Rasterizer::getHitRecord(Ray ray, double d0, double d1) {
  *
  */
 void Rasterizer::rasterization(struct Fragment ***frags) {
+    int fragCount = 0;
     for (unsigned int i=0; i<triangles.size(); i++) {
+        //if (i==0) continue; // shows right triangle
+        //if (i==1) continue; // shows left triangle
+        cout << "at triangle " << i << endl;
         Triangle &tri = triangles[i];
 
-        // compute 2D bounding box of this triangle
+        // compute 2D bounding box of this triangle's imgPoints (z coordinates don't matter)
         //double minX=DBL_MAX, maxX=-DBL_MIN, minY=DBL_MAX, maxY=-DBL_MAX;
-        double minX=tri.points[0][0], maxX=minX, minY=tri.points[0][1], maxY=minY;
+        double minX=tri.imgPoints[0][0], maxX=minX, minY=tri.imgPoints[0][1], maxY=minY;
         for (int c=1; c<3; c++) {
-            if (tri.points[c][0] < minX)
-                minX = tri.points[c][0];
-            if (tri.points[c][0] > maxX)
-                maxX = tri.points[c][0];
+            if (tri.imgPoints[c][0] < minX)
+                minX = tri.imgPoints[c][0];
+            if (tri.imgPoints[c][0] > maxX)
+                maxX = tri.imgPoints[c][0];
 
-            if (tri.points[c][1] < minY)
-                minY = tri.points[c][1];
-            if (tri.points[c][1] > maxY)
-                maxY = tri.points[c][1];
+            if (tri.imgPoints[c][1] < minY)
+                minY = tri.imgPoints[c][1];
+            if (tri.imgPoints[c][1] > maxY)
+                maxY = tri.imgPoints[c][1];
         }
+        minX = floor(minX);
+        minY = floor(minY);
+        maxX = ceil(maxX);
+        maxY = ceil(maxY);
+
+        ///cout << endl << tri << endl;
+        ///printf("has bounding box (%d,%d) -> (%d, %d)\n", (int) minX, (int) minY, (int) maxX, (int) maxY);
+        int skipCount = 0;
 
         // iterate over pixels in bounding box (with corners (minX,minY) and (maxX,maxY))
         // (x,y) are the coordinates of the center of a (1x1) pixel
-        for (int y=floor(minY); y<=ceil(maxY); y++) {
-            for (int x=floor(minX); x<=ceil(maxX); x++) {
-                // check if point (x,y) lines inside the 2D triangle formed by tri.imgPoints (ignoring the z component of each):
-
-                // construct a triangle using tri.imgPoints as vertices, but set z values to 0
-                Vector3d points[3] = {tri.imgPoints[0], tri.imgPoints[1], tri.imgPoints[2]};
-                ///Vector3d normals[3] = {tri.norms[0], tri.norms[1], tri.norms[2]};
-                for (int c=0; c<3; c++) {
-                    tri.points[c][2] = 0;
+        for (int y=(int) minY; y<=(int) maxY; y++) {
+            for (int x=(int) minX; x<=(int) maxX; x++) {
+                // ensure (x,y) is on the image
+                if (!(0<=x && x<nff.v_resolution[0] && 0<=y && y<nff.v_resolution[1])) {
+                    skipCount++;
+                    continue;
                 }
-                ///Triangle tmp(points, normals);
-                // check if a ray from (0,0,0) -> (x,y,0) would hit this new triangle
-                HitRecord hit = Triangle(points).intersect(Ray(Vector3d(0,0,0), Vector3d(x, y, 0)));
-                if (hit.t == -1)
-                    continue; // (x,y) is not on the triangle
-                // TODO: check hit.a, hit.B, hit.g here to check if point is on triangle edge so we can deal with cracks (holes)
-                // store info about this point on the triangle (for computing this pixel's color later)
-                struct Fragment *frag = new struct Fragment;
-                // interpolate normal, color, and zValue at this point:
-                frag->normal = hit.a * tri.norms[0] + hit.B * tri.norms[1] + hit.g * tri.norms[2];
-                frag->color = hit.a * tri.colors[0] + hit.B * tri.norms[1] + hit.g * tri.norms[2];
-                frag->zValue = hit.a * tri.points[0][2] + hit.B * tri.points[1][2] + hit.g * tri.points[2][2];
-                // interpolate world position of intersection point:
-                frag->worldPos = hit.a * tri.points[0] + hit.B * tri.points[1] + hit.g * tri.points[2];
-                frag->next = NULL;
+                // get fragment for this pixel
+                Fragment *frag = getFrag(x, y, tri);
+                printf("is (%d, %d) in triangle: %d\n", x, y, (frag != NULL));
+                if (frag == NULL) // pixel doesn't overlap tri
+                    continue;
+                fragCount++;
 
-                // store frag at front of linked list for this pixel
+                // store fragment at front of: linked list for this pixel
                 if (frags[y][x] == NULL) {
                     frags[y][x] = frag;
                 }
@@ -304,21 +305,63 @@ void Rasterizer::rasterization(struct Fragment ***frags) {
                     frags[y][x] = frag;
                 }
             }
-
         }
-
+        ///printf("skipped %d pixels in bounding box (outside image)\n", skipCount);
     }
-
+    printf("created %d fragments\n", fragCount);
 }
 
-void Rasterizer::fragmentProcessing(struct Fragment ***frags) {
+/**
+ * (helper function for rasterization())
+ * checks if pixel overlaps this triangle and returns a fragment for this pixel
+ * (NULL if pixel doesn't overlap triangle)
+ *
+ * (x,y) is the coordinates of the pixel (center of pixel in image space)
+ * tri:  triangle to check if this pixel overlaps (i.e. (x,y) is inside)
+ * TODO: create static function in Triangle class to check if 2d point is inside 2d triangle
+ */
+Fragment *Rasterizer::getFrag(int x, int y, Triangle &tri) {
+    Fragment *frag = NULL;
+
+    // check if point (x,y) lines inside the 2D triangle formed by tri.imgPoints (ignoring the z component of each):
+    double Ax = tri.imgPoints[0][0], Ay = tri.imgPoints[0][1];
+    double Bx = tri.imgPoints[1][0], By = tri.imgPoints[1][1];
+    double Cx = tri.imgPoints[2][0], Cy = tri.imgPoints[2][1];
+    // compute a, B, g
+    double B = ((Ay-Cy)*x + (Cx-Ax)*y + Ax*Cy - Cx*Ay) / ((Ay-Cy)*Bx + (Cx-Ax)*By + Ax*Cy -Cx*Ay);
+    double g = ((Ay-By)*x + (Bx-Ax)*y + Ax*By - Bx*Ay) / ((Ay-By)*Cx + (Bx-Ax)*Cy + Ax*By - Bx*Ay);
+    double a = 1.0 - B - g;
+    double g_num = ((Ay-By)*x + (Bx-Ax)*y + Ax*By - Bx*Ay);
+    double g_denom = ((Ay-By)*Cx + (Bx-Ax)*Cy + Ax*By - Bx*Ay);
+    ///printf("\n\nAx=%g, Ay=%g, Bx=%g, By=%g, Cx=%g, Cy=%g\n", Ax, Ay, Bx, By, Cx, Cy);
+    ///printf("point is %d, %d\n", x, y);
+    ///printf("\na=%g,\tB=%g,\tg=%g\n", a,B,g);
+    printf("\na=%f,\tB=%f,\tg=%f\n", a,B,g);
+
+    const double ZERO = -2e-15; // IMPORTANT: avoid issues like a=1, B=-0, g=0
+    //  TODO: check a, B, g here to check if point is on triangle edge so we can deal with cracks (holes)
+    if (a>ZERO && B>ZERO && g>ZERO) {
+        // store info about this point on the triangle (for computing this pixel's color later)
+        frag = new Fragment;
+        // interpolate worldPos, normal, color, and zValue at this point:
+        frag->worldPos = a * tri.imgPoints[0]    + B * tri.imgPoints[1]    + g * tri.imgPoints[2];
+        frag->normal =   a * tri.norms[0]        + B * tri.norms[1]        + g * tri.norms[2];
+        frag->color =    a * tri.colors[0]       + B * tri.norms[1]        + g * tri.norms[2];
+        frag->zValue =   a * tri.imgPoints[0][2] + B * tri.imgPoints[1][2] + g * tri.imgPoints[2][2];
+        frag->next = NULL;
+    }
+    return frag;
+}
+
+void Rasterizer::fragmentProcessing(Fragment ***frags) {
     // TODO: implement if desired
 }
 
-void Rasterizer::blending(unsigned char* pixels, struct Fragment ***frags) {
+void Rasterizer::blending(unsigned char* pixels, Fragment ***frags) {
     const int HEIGHT = nff.v_resolution[1];
     const int WIDTH = nff.v_resolution[0];
     // iterate over all pixels in the image ((0,0) is the top left corner pixel)
+    int count = 0;
     for (int j=0; j<HEIGHT; j++) {      // iterate over rows
         for (int i=0; i<WIDTH; i++) {   // iterate over columns
             // (i,j) is the current pixel (in image coordinates)
@@ -326,6 +369,7 @@ void Rasterizer::blending(unsigned char* pixels, struct Fragment ***frags) {
             Vector3d color = nff.b_color;
 
             if (frags[j][i] != NULL) {
+                count++;
                 Fragment *best=frags[j][i], *cur=best;
                 while (cur != NULL) {
                     if (cur->zValue < best->zValue) {
@@ -334,7 +378,6 @@ void Rasterizer::blending(unsigned char* pixels, struct Fragment ***frags) {
                     cur = cur->next;
                 }
                 color = best->color;
-                cout << "set a best color" << endl;
             }
 
             // set color of pixel
@@ -344,4 +387,5 @@ void Rasterizer::blending(unsigned char* pixels, struct Fragment ***frags) {
             }
         }
     }
+    printf("colored %d pixels\n", count);
 }

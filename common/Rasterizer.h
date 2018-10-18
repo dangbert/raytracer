@@ -50,9 +50,10 @@ class Rasterizer {
         void vertexProcessing(Eigen::Matrix4d M);
         Vector3d shadePoint(Triangle &tri, int vertex);
         HitRecord getHitRecord(Ray ray, double d0, double d1);
-        void rasterization(struct Fragment ***frags);
-        void fragmentProcessing(struct Fragment ***frags);
-        void blending(unsigned char* pixels, struct Fragment ***frags);
+        void rasterization(Fragment ***frags);
+        Fragment *getFrag(int x, int y, Triangle &tri);
+        void fragmentProcessing(Fragment ***frags);
+        void blending(unsigned char* pixels, Fragment ***frags);
 
         std::vector<Triangle> triangles;        // vector of all triangles in scene
         SettingsNFF nff;
