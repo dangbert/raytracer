@@ -145,7 +145,7 @@ Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch, std
             triangles.push_back(Triangle(points, matr));
         }
         else {
-            Vector3d norms[3] = {normals[0], norms[i-1], norms[i]};
+            Vector3d norms[3] = {normals[0], normals[i-1], normals[i]};
             triangles.push_back(Triangle(points, norms, matr));
         }
     }

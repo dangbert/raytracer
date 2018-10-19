@@ -148,7 +148,7 @@ void RayTracer::render(std::string filename, int bounces, bool debug) {
  * debug:   whether to print extra info for debugging
  */
 Vector3d RayTracer::trace(Ray ray, double d0, double d1, int bounces, bool debug) {
-    bool interpolate = false; // TODO: interpolate normal doesn't work yet (leave false)
+    bool interpolate = false; // if we want to interpolate normals (for Surfaces that are patches)
     HitRecord hit = getHitRecord(ray, d0, d1, debug);
     if (hit.surfIndex == -1) // no intersection
         return nff.b_color;

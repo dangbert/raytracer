@@ -20,6 +20,8 @@ Rasterizer::Rasterizer(std::string filename) {
         exit(1);
     }
     cout << nff << endl;
+    // TODO: now flip the image horizontally as well???
+    nff.v_up = -1 * nff.v_up; // hack to flip the image (so it's not upside down)
 
     // store rasterizer settings:
     // vectors defining our world coordinates (origin is at nff.v_from):
@@ -174,7 +176,7 @@ void Rasterizer::vertexProcessing(Eigen::Matrix4d M) {
 
 /*
  * helper function for vertexProcessing()
- * shades a point on a triangle and return the color
+ * shades a vertex of a triangle and returns the color
  *
  * based on RayTracer::trace()
  */
@@ -191,10 +193,6 @@ Vector3d Rasterizer::shadePoint(Triangle &tri, int vertex) {
         Light light = nff.lights[i];
         // unit vector pointing at light from point
         L = (light.pos - point).normalized();
-        // check if light is visible (doing this creates shadows)
-        // TODO: do I just leave this out for rasterization without shadows???
-        //if (getHitRecord(Ray(point, L), SHADOW_BIAS, -1).dist != -1)
-        //    continue; // light isn't visible
 
         if (tri.isPatch()) {
             N = tri.norms[vertex];    // surface normal
@@ -222,39 +220,12 @@ Vector3d Rasterizer::shadePoint(Triangle &tri, int vertex) {
     return color;
 }
 
-
-/**
- * get the hit record for this ray's intersection with a surface in the scene
- * HitRecord surfIndex is set to -1 if there is no intersection
- *
- * based on RayTracer::getHitRecord()
- * TODO: delete this function if I don't need it (if not doing shadows)
- */
-HitRecord Rasterizer::getHitRecord(Ray ray, double d0, double d1) {
-    HitRecord bestHit(SurfaceType::POLYGON, -1); // record of the closest hit so far
-    // TODO: should we ignore shapes that aren't polygon cause we aren't rendering them?
-    for (unsigned int i=0; i<nff.surfaces.size(); i++) {
-        HitRecord hit = nff.surfaces[i]->intersect(ray, d0, d1);
-
-        // check if we need to update bestHit
-        if (hit.dist != -1 && (bestHit.dist == -1 || hit.dist < bestHit.dist)) {
-            // we had our first intersection, or found a closer intersection
-            bestHit = hit;
-            bestHit.surfIndex = i; // index of closest surface intersected by this ray
-        }
-    }
-    return bestHit;
-}
-
 /**
  *
  */
 void Rasterizer::rasterization(struct Fragment ***frags) {
     int fragCount = 0;
     for (unsigned int i=0; i<triangles.size(); i++) {
-        //if (i==0) continue; // shows right triangle
-        //if (i==1) continue; // shows left triangle
-        cout << "at triangle " << i << endl;
         Triangle &tri = triangles[i];
 
         // compute 2D bounding box of this triangle's imgPoints (z coordinates don't matter)
@@ -291,7 +262,6 @@ void Rasterizer::rasterization(struct Fragment ***frags) {
                 }
                 // get fragment for this pixel
                 Fragment *frag = getFrag(x, y, tri);
-                printf("is (%d, %d) in triangle: %d\n", x, y, (frag != NULL));
                 if (frag == NULL) // pixel doesn't overlap tri
                     continue;
                 fragCount++;
@@ -333,12 +303,8 @@ Fragment *Rasterizer::getFrag(int x, int y, Triangle &tri) {
     double a = 1.0 - B - g;
     double g_num = ((Ay-By)*x + (Bx-Ax)*y + Ax*By - Bx*Ay);
     double g_denom = ((Ay-By)*Cx + (Bx-Ax)*Cy + Ax*By - Bx*Ay);
-    ///printf("\n\nAx=%g, Ay=%g, Bx=%g, By=%g, Cx=%g, Cy=%g\n", Ax, Ay, Bx, By, Cx, Cy);
-    ///printf("point is %d, %d\n", x, y);
-    ///printf("\na=%g,\tB=%g,\tg=%g\n", a,B,g);
-    printf("\na=%f,\tB=%f,\tg=%f\n", a,B,g);
 
-    const double ZERO = -2e-15; // IMPORTANT: avoid issues like a=1, B=-0, g=0
+    const double ZERO = -2e-15; // IMPORTANT: avoid issues like a=1, B=-0, g=0 TODO: is this a normal way of dealing with this issue?
     //  TODO: check a, B, g here to check if point is on triangle edge so we can deal with cracks (holes)
     if (a>ZERO && B>ZERO && g>ZERO) {
         // store info about this point on the triangle (for computing this pixel's color later)
@@ -346,7 +312,7 @@ Fragment *Rasterizer::getFrag(int x, int y, Triangle &tri) {
         // interpolate worldPos, normal, color, and zValue at this point:
         frag->worldPos = a * tri.imgPoints[0]    + B * tri.imgPoints[1]    + g * tri.imgPoints[2];
         frag->normal =   a * tri.norms[0]        + B * tri.norms[1]        + g * tri.norms[2];
-        frag->color =    a * tri.colors[0]       + B * tri.norms[1]        + g * tri.norms[2];
+        frag->color =    a * tri.colors[0]       + B * tri.colors[1]       + g * tri.colors[2];
         frag->zValue =   a * tri.imgPoints[0][2] + B * tri.imgPoints[1][2] + g * tri.imgPoints[2][2];
         frag->next = NULL;
     }
@@ -372,7 +338,8 @@ void Rasterizer::blending(unsigned char* pixels, Fragment ***frags) {
                 count++;
                 Fragment *best=frags[j][i], *cur=best;
                 while (cur != NULL) {
-                    if (cur->zValue < best->zValue) {
+                    // TODO: why isn't it < instead of > here?
+                    if (cur->zValue > best->zValue) {
                         best = cur;
                     }
                     cur = cur->next;

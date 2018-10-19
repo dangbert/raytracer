@@ -49,7 +49,6 @@ class Rasterizer {
         Eigen::Matrix4d createMatrix(bool debug=false);
         void vertexProcessing(Eigen::Matrix4d M);
         Vector3d shadePoint(Triangle &tri, int vertex);
-        HitRecord getHitRecord(Ray ray, double d0, double d1);
         void rasterization(Fragment ***frags);
         Fragment *getFrag(int x, int y, Triangle &tri);
         void fragmentProcessing(Fragment ***frags);
