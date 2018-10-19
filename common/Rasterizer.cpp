@@ -162,14 +162,12 @@ void Rasterizer::vertexProcessing(Eigen::Matrix4d M) {
             // transform vertices from world space -> image space
             Eigen::Vector4d tmp;
             tmp << tri.points[c], 1;
-            ///printf("mapped point (%g,%g,%g, %g)", tmp[0], tmp[1], tmp[2], tmp[3]); cout << std::setw(25);
             tmp = M * tmp; // map this point to image coordinates
             // TODO: consider waiting to do the homogenous divide until after clipping (if I do clipping)
             tmp = tmp / tmp[3];
             // store the image points (but keep the world space points around)
             // (the z coordinate of each imgPoint will be used for depth ordering later)
             tri.imgPoints[c] = Vector3d(tmp[0], tmp[1], tmp[2]);
-            ///printf("-> (%g,%g,%g, %g)\n", tmp[0], tmp[1], tmp[2], tmp[3]);
         }
     }
 }
@@ -247,15 +245,13 @@ void Rasterizer::rasterization(struct Fragment ***frags) {
         maxX = ceil(maxX);
         maxY = ceil(maxY);
 
-        ///cout << endl << tri << endl;
-        ///printf("has bounding box (%d,%d) -> (%d, %d)\n", (int) minX, (int) minY, (int) maxX, (int) maxY);
         int skipCount = 0;
 
         // iterate over pixels in bounding box (with corners (minX,minY) and (maxX,maxY))
         // (x,y) are the coordinates of the center of a (1x1) pixel
         for (int y=(int) minY; y<=(int) maxY; y++) {
             for (int x=(int) minX; x<=(int) maxX; x++) {
-                // ensure (x,y) is on the image
+                // ensure (x,y) is on the image (this is instead of clipping)
                 if (!(0<=x && x<nff.v_resolution[0] && 0<=y && y<nff.v_resolution[1])) {
                     skipCount++;
                     continue;
@@ -276,7 +272,6 @@ void Rasterizer::rasterization(struct Fragment ***frags) {
                 }
             }
         }
-        ///printf("skipped %d pixels in bounding box (outside image)\n", skipCount);
     }
     printf("created %d fragments\n", fragCount);
 }
@@ -304,9 +299,8 @@ Fragment *Rasterizer::getFrag(int x, int y, Triangle &tri) {
     double g_num = ((Ay-By)*x + (Bx-Ax)*y + Ax*By - Bx*Ay);
     double g_denom = ((Ay-By)*Cx + (Bx-Ax)*Cy + Ax*By - Bx*Ay);
 
-    const double ZERO = -2e-15; // IMPORTANT: avoid issues like a=1, B=-0, g=0 TODO: is this a normal way of dealing with this issue?
     //  TODO: check a, B, g here to check if point is on triangle edge so we can deal with cracks (holes)
-    if (a>ZERO && B>ZERO && g>ZERO) {
+    if (a>=0 && B>=0 && g>=0) {
         // store info about this point on the triangle (for computing this pixel's color later)
         frag = new Fragment;
         // interpolate worldPos, normal, color, and zValue at this point:
