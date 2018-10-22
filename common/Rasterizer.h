@@ -44,6 +44,7 @@ class Rasterizer {
     public:
         Rasterizer(std::string filename);
         void render(std::string filename, bool debug=false);
+        void animate(std::string filename, bool debug);
 
     private:
         Eigen::Matrix4d createMatrix(bool debug=false);

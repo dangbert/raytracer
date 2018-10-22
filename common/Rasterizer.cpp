@@ -350,3 +350,83 @@ void Rasterizer::blending(unsigned char* pixels, Fragment ***frags) {
     }
     printf("colored %d pixels\n", count);
 }
+
+/**
+ * for fun
+ * output multiple frames on the scene in a moving animation
+ *
+ * filename:   first part of filename
+ *             (<number>.ppm will be appended for each frame)
+ * debug:      whether to print out extra info for debugging
+ */
+void Rasterizer::animate(std::string filename, bool debug) {
+    int count = 0;
+    int bounces = 5;
+    /*
+    for (double h=0; h<10; h+=0.1) {
+        std::string tmp = "";
+        std::stringstream ss;
+        ss << filename << count << ".ppm";
+        ss >> tmp;
+
+        nff.v_hither = h;
+        render(tmp, debug);
+        count++;
+    }
+    */
+    Vector3d w = (nff.v_from - nff.v_at).normalized();
+    Vector3d u = nff.v_up.cross(w).normalized();
+    Vector3d v = w.cross(u).normalized();
+
+    Vector3d start = nff.v_from;
+    for (double a=0; a<100; a+=1) {
+        double angle = (2*M_PI) * (a/100);
+        std::string tmp = "";
+        std::stringstream ss;
+        ss << filename << count << ".ppm";
+        ss >> tmp;
+
+        Vector3d axis = v;
+        Vector3d c = nff.v_at; // center of rotation
+
+        Vector3d point = start;
+        Eigen::Affine3d A = Eigen::Translation3d(c) * Eigen::AngleAxisd(angle, axis) * Eigen::Translation3d(-c);
+        //Eigen::Vector4d point4 = point.conservativeResize(4);
+        //point4(3)=1;
+        Eigen::Vector4d point4;
+        point4[0] = point[0];
+        point4[1] = point[1];
+        point4[2] = point[2];
+        point4[3] = 1;
+        point4=(A.matrix() * point4);
+        //point = point4.conservativeResize(3);
+
+        point[0] = point4[0] / point4[3];
+        point[1] = point4[1] / point4[3];
+        point[2] = point4[2] / point4[3];
+
+
+        nff.v_from = point;
+
+        // update scene:
+        ////////////////////////
+        scene.eye = nff.v_from;
+        scene.w = (nff.v_from - nff.v_at).normalized();
+        scene.u = nff.v_up.cross(scene.w).normalized();
+        scene.v = scene.w.cross(scene.u).normalized();
+
+        // planes defining view frustum:
+        scene.h =       tan(nff.v_angle / 2.0 * M_PI/180.0);
+        scene.right =   scene.h;
+        scene.left =   -1.0 * scene.right;
+        scene.top =    scene.right / (nff.v_resolution[0]/nff.v_resolution[1]);
+        scene.bottom = scene.left / (nff.v_resolution[0]/nff.v_resolution[1]);
+        scene.near =   -1.0 *nff.v_hither;
+        scene.far =    1000 * scene.near;
+        ////////////////////////
+
+        // create frame
+        render(tmp, bounces);
+        count++;
+    }
+}
