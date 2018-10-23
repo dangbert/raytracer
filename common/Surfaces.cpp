@@ -1,6 +1,7 @@
+#include "Surfaces.h"
 #include <Eigen/Dense>
 #include <iostream>
-#include "Surfaces.h"
+#include <iomanip>
 
 using Eigen::Vector3d;
 using std::cout;
@@ -22,6 +23,7 @@ Triangle::Triangle(Vector3d points[3], Material *matr)
     for (int i=0; i<3; i++) {
         this->points[i] = points[i];
         this->norms[i] = Vector3d(0,0,0);
+        this->imgPoints[i] = Vector3d(0,0,0);
     }
 }
 
@@ -38,6 +40,7 @@ Triangle::Triangle(Vector3d points[3], Vector3d norms[3], Material *matr)
     for (int i=0; i<3; i++) {
         this->points[i] = points[i];
         this->norms[i] = norms[i];
+        this->imgPoints[i] = Vector3d(0,0,0);
     }
 }
 
@@ -101,16 +104,21 @@ Vector3d Triangle::getNormal(HitRecord hit, bool interpolate) const {
  * print out Triangle object for debugging
  */
 std::ostream &operator<<(std::ostream &sout, const Triangle &tri) {
-    sout << "Triangle: ";
-    sout << "(" << tri.points[0][0] << "," << tri.points[0][1] << "," << tri.points[0][2] << ")" << endl;
+    sout << "Triangle:" << endl;;
+    for (int i=0; i<3; i++) {
+        sout << "(" << tri.points[i][0] << "," << tri.points[i][1] << "," << tri.points[i][2] << ")";
     if (tri.patch)
-        sout << "normal: (" << tri.norms[0][0] << "," << tri.norms[0][1] << "," << tri.norms[0][2] << ")" << endl;
-    sout << "(" << tri.points[1][0] << "," << tri.points[1][1] << "," << tri.points[1][2] << ")" << endl;
-    if (tri.patch)
-        sout << "normal: (" << tri.norms[1][0] << "," << tri.norms[1][1] << "," << tri.norms[1][2] << ")" << endl;
-    sout << "(" << tri.points[2][0] << "," << tri.points[2][1] << "," << tri.points[2][2] << ")" << endl;
-    if (tri.patch)
-        sout << "normal: (" << tri.norms[2][0] << "," << tri.norms[2][1] << "," << tri.norms[2][2] << ")" << endl;
+        sout << ", normal: (" << tri.norms[i][0] << "," << tri.norms[i][1] << "," << tri.norms[i][2] << ")";
+    sout << endl;
+    }
+    sout << std::setw(0);
+    // print imgPoints if they were set
+    if (tri.imgPoints[0] != Vector3d(0,0,0) && tri.imgPoints[1] != Vector3d(0,0,0)) {
+        sout << "  (imgPoints):" << endl;
+        for (int i=0; i<3; i++) {
+            sout << "  (" << tri.imgPoints[i][0] << ", " << tri.imgPoints[i][1] << ", " << tri.imgPoints[i][2] << ")" << endl;
+        }
+    }
     return sout;
 }
 
@@ -137,7 +145,7 @@ Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch, std
             triangles.push_back(Triangle(points, matr));
         }
         else {
-            Vector3d norms[3] = {normals[0], norms[i-1], norms[i]};
+            Vector3d norms[3] = {normals[0], normals[i-1], normals[i]};
             triangles.push_back(Triangle(points, norms, matr));
         }
     }
