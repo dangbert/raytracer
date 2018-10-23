@@ -1,34 +1,35 @@
   +--------------------------------------------------------+
-  |___   25          README comment or file                |
-  |      ___    1      Submitted a readme file             |
-  |      ___    5      Description of assignment           |
-  |      ___    2      Clean submission(no .o .d files)    |  
-  |      ___    2      Statement of help                   |
-  |      ___   10      Code Comments                       |
-  |      ___    5      Regular commits and log entries     |
+  |_25   25          README comment or file                |
+  |      _1_    1      Submitted a readme file             |
+  |      _5_    5      Description of assignment           |
+  |      _2_    2      Clean submission(no .o .d files)    |
+  |      _2_    2      Statement of help                   |
+  |      _10   10      Code Comments                       |
+  |      _5_    5      Regular commits and log entries     |
   +--------------------------------------------------------+
-  |___   20          Implementation                        |
-  |      ___   15      Compiles and executes w/o errors    |
-  |      ___    5      Written in C/C++;                   |
+  |_20   20          Implementation                        |
+  |      _15   15      Compiles and executes w/o errors    |
+  |      _5_    5      Written in C/C++;                   |
   +--------------------------------------------------------+
-  |___   20          Input/output                          |
-  |      ___    5      Correctly parses nff file           |
-  |      ___    5      Outputs valid ppm image             |
-  |      ___   10      Outputs correct image               |
+  |_20   20          Input/output                          |
+  |      _5_    5      Correctly parses nff file           |
+  |      _5_    5      Outputs valid ppm image             |
+  |      _10   10      Outputs correct image               |
   +--------------------------------------------------------+
-  |___   20         Local illumination                     |
-  |      ___   10     Diffuse lighting                     |
-  |      ___   10     Specular lighting                    |
+  |_20   20         Local illumination                     |
+  |      _10   10     Diffuse lighting                     |
+  |      _10   10     Specular lighting                    |
   +--------------------------------------------------------+
-  |___   40         Global Illumination                    |
-  |      ___   15     Shadow rays                          |
-  |      ___   20     Reflection rays                      |
-  |      ___    3     Stop at 5 bounces                    |
-  |      ___    2     Uses shadow/reflection bias          |
+  |_40   40         Global Illumination                    |
+  |      _15   15     Shadow rays                          |
+  |      _20   20     Reflection rays                      |
+  |      _3_    3     Stop at 5 bounces                    |
+  |      _2_    2     Uses shadow/reflection bias          |
   +--------------------------------------------------------+
   |___     25        (Ex) Depth of Field                   |
   |___     20        (Ex) Refraction                       |
   |___     20        (Ex) Phong shading                    |
+  |___     20        (Ex) Stratified Sampling              |
   +--------------------------------------------------------+
-  |___               Total (of 125)                        |
+  |125               Total (of 125)                        |
   +--------------------------------------------------------+
