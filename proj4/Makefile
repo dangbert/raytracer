@@ -19,7 +19,7 @@ $(NAME): $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o $(NAME)
+	rm -f *.o $(NAME) out.obj
 
 .PHONY: run
 run:
