@@ -19,7 +19,7 @@ inline Tri &Tri::operator=(const Tri &that) {
   this->indices[1] = that.indices[1];
   this->indices[2] = that.indices[2];
   return (*this);
-};
+}
 
 bool readObjFile(char *fname, std::vector<Eigen::Vector3d> &pts, std::vector<Tri> &triangles);
 
