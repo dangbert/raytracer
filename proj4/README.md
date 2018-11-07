@@ -10,13 +10,12 @@ Dan Engbert (end1@umbc.edu), CMSC 435 Fall 18
 make && ./smoothing inputs/bunny.obj out.obj 1 1 50
 
 # run with implicit integration enabled:
-# TODO: add command line arg
-
-# TODO: verify this works on gl
+make && ./smoothing -i 10e-10 inputs/bunny.obj out.obj 1 1 50
 ````
 
 
 ## HELP RECEIVED:
 * http://w.multires.caltech.edu/pubs/ImplicitFairing.pdf
 * https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
+* https://www.gnu.org/software/libc/manual/html_node/Example-of-Getopt.html
 ---

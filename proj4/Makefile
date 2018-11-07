@@ -13,7 +13,7 @@ LIB = -L/usr/lib64 -lblas
 
 # build target executable
 $(NAME): $(OBJS)
-	$(CC) $(LIB) -o $@ $^
+	$(CC) -o $@ $^ $(LIB)
 
 # build object files for each cpp file
 # $@ is the target, $^ are the dependencies
@@ -27,3 +27,7 @@ clean:
 .PHONY: run
 run:
 	./$(NAME) inputs/bunny.obj out.obj 1 1 50
+
+.PHONY: implicit
+implicit:
+	./smoothing -i 10e-10 inputs/bunny.obj out_implicit.obj 1 1 50
