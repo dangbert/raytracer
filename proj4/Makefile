@@ -5,7 +5,7 @@ CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors -O2
 NAME = smoothing
 OBJS = main.o io.o
 DEPS = *.h
-INCLUDE = -I../common/ -I/usr/include/eigen3/
+INCLUDE = -I../common/ -I/usr/include/eigen3/ -I/afs/umbc.edu/users/a/d/adamb/pub/
 # note on fedora I had to: sudo ln -s /usr/lib64/libblas.so.3.8.0 /usr/lib64/libblas.so
 # (because libblas.so did not exist for some reason)
 LIB = -L/usr/lib64 -lblas
