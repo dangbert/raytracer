@@ -6,11 +6,14 @@ NAME = smoothing
 OBJS = main.o io.o
 DEPS = *.h
 INCLUDE = -I../common/ -I/usr/include/eigen3/
+# note on fedora I had to: sudo ln -s /usr/lib64/libblas.so.3.8.0 /usr/lib64/libblas.so
+# (because libblas.so did not exist for some reason)
+LIB = -L/usr/lib64 -lblas
 
 
 # build target executable
 $(NAME): $(OBJS)
-	$(CC) -o $@ $^
+	$(CC) $(LIB) -o $@ $^
 
 # build object files for each cpp file
 # $@ is the target, $^ are the dependencies

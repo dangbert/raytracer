@@ -5,3 +5,5 @@
 *.png
 hide
 shade
+*.obj
+smoothing
