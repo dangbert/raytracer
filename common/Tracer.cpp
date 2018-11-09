@@ -163,6 +163,7 @@ Vector3d RayTracer::trace(Ray ray, double d0, double d1, int bounces, bool debug
     // iterate over lights:
     Vector3d V, N, H, L, R;
     // unit vector from point of intersection to origin of ray
+    // TODO: I think I had to multiply R by negative 1 below because this rays points at the point, not the camera???
     V = (hit.point - ray.eye).normalized(); // TODO: should this always point at viewer???
     //V = (hit.point - nff.v_from).normalized();
     double lightIntensity = 1.0 / sqrt(nff.lights.size());
