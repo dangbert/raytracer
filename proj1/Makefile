@@ -14,7 +14,7 @@ $(NAME): $(OBJS)
 	$(CC) -o $@ $^
 
 # build object files for each cpp file
-# $@ is the target, $^ are the dependencies
+# $@ is the target, $^ are the dependencies ($< is the first of the dependencies)
 %.o: %.cpp $(DEPS)
 	$(CC) $(INCLUDE) -c -o $@ $< $(CFLAGS)
 

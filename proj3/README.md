@@ -15,6 +15,7 @@ make && ./proj3 <input.ppm>
 ## HELP RECEIVED:
 * https://www.fileformat.info/format/nff/egff.htm
 * Textbook: Fundamentals of Computer Graphics 3rd Edition
+* https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
 ---
 
 ## PERSONAL NOTES:

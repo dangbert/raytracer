@@ -1,4 +1,5 @@
-CC          = c++ 
+CC          = g++ 
+CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors -O2
 
 #-----------------------------------------
 #Optimization ----------------------------
@@ -10,13 +11,12 @@ GL_LIB = -lGL -lglut -lGLU
 #-----------------------------------------
 
 TARGETS = fishtank viewer
-
-OBJECTS = kdTree.o
+OBJECTS = Boids.o
 
 #-----------------------------------------
 
 LIBS = 
-INCS = -I/usr/local/include/eigen3 -I/usr/include/eigen3
+INCS = -I../common -I/usr/local/include/eigen3 -I/usr/include/eigen3
 
 CCOPTS = $(OPT) $(INCS) 
 LDOPTS = $(OPT) $(INCS) $(LIBS) 
@@ -24,41 +24,29 @@ LDOPTS = $(OPT) $(INCS) $(LIBS)
 #-----------------------------------------
 #-----------------------------------------
 
-default: $(TARGETS)
+.PHONY: run clean
 
+default: $(TARGETS)
 
 clean:
 	/bin/rm -f *.o $(TARGETS)
 
-#-----------------------------------------
-#-----------------------------------------
-
-viewer: $(OBJECTS) viewer.o
-	$(CC) $(OBJECTS) viewer.o $(LDOPTS) $(GL_LIB) -o viewer
-
-fishtank: $(OBJECTS) fishtank.o
-	$(CC) $(OBJECTS) fishtank.o $(LDOPTS) -o fishtank
+run:
+	./fishtank sample.in
 
 #-----------------------------------------
 #-----------------------------------------
 
-.cpp.o: 
-	$(CC) $(CCOPTS) -c $< 
+viewer: viewer.cpp
+	$(CC) $(CFLAGS) $(INCS) $(LDOPTS) $(GL_LIB) -c $< -o $@
 
+fishtank: fishtank.o $(OBJECTS)
+	$(CC) $(CFLAGS) $(INCS) $(LDOPTS) $^ -o $@
+
+fishtank.o: fishtank.cpp
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+
+Boids.o: Boids.cpp Boids.h
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 #-----------------------------------------
 #-----------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
