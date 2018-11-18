@@ -42,9 +42,10 @@ class Boid {
 class Flock {
     public:
         Flock(std::string fname);
-        int readFile(std::string fname);
+        void readFile(std::string fname);
 
     private:
+        inline void getLineHelper(std::ifstream &f, std::string &line);
         std::vector<Boid> boids; // all boids in simulation
         std::vector<Food> foods; // all food in simulation
         double bSize;       // default size of a boid)

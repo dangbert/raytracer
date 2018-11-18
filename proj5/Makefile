@@ -1,5 +1,5 @@
 CC          = g++ 
-CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors -O2
+CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors
 
 #-----------------------------------------
 #Optimization ----------------------------
@@ -32,21 +32,23 @@ clean:
 	/bin/rm -f *.o $(TARGETS)
 
 run:
-	./fishtank sample.in
+	make && ./fishtank sample.in
 
 #-----------------------------------------
 #-----------------------------------------
 
 viewer: viewer.cpp
-	$(CC) $(CFLAGS) $(INCS) $(LDOPTS) $(GL_LIB) -c $< -o $@
+	$(CC) $(INCS) $(LDOPTS) $(GL_LIB) -c $< -o $@
+# (ignore warnings in viewer cause I didn't write it)
+#$(CC) $(CFLAGS) $(INCS) $(LDOPTS) $(GL_LIB) -c $< -o $@
 
 fishtank: fishtank.o $(OBJECTS)
 	$(CC) $(CFLAGS) $(INCS) $(LDOPTS) $^ -o $@
 
 fishtank.o: fishtank.cpp
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LDOPTS) -c $< -o $@
 
 Boids.o: Boids.cpp Boids.h
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LDOPTS) -c $< -o $@
 #-----------------------------------------
 #-----------------------------------------
