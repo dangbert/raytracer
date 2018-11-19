@@ -34,6 +34,9 @@ clean:
 run:
 	make && ./fishtank sample.in
 
+test:
+	make && rm -f out && ./fishtank sample.in > out && ./teacher/viewer out
+
 #-----------------------------------------
 #-----------------------------------------
 

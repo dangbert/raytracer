@@ -15,8 +15,8 @@ class Flock;
  * represents a piece of food in the simulation
  */
 struct Food {
-    Vector3d position;
-    Vector3d velocity;
+    Vector3d pos;
+    Vector3d vel;
     double time; // time the food should appear
 };
 
@@ -26,13 +26,14 @@ struct Food {
 class Boid {
     friend class Flock;
     public:
-        Boid(Vector3d position=Vector3d(0,0,0), Vector3d heading=Vector3d(0,0,0), Vector3d velocity=Vector3d(0,0,0)) 
-            : position(position), heading(heading), velocity(velocity) {};
+        Boid(Vector3d pos=Vector3d(0,0,0), Vector3d vel=Vector3d(0,0,0)) 
+            : pos(pos), vel(vel) {};
 
     private:
-        Vector3d position;
-        Vector3d heading;
-        Vector3d velocity;
+        Vector3d pos;     // current position
+        Vector3d vel;     // velocity (speed and direction)
+        std::vector<int> neighs; // neighbors of this bird (indices in Flock::boids)
+        Vector3d frc;        // force for current timestep
 };
 
 /**
@@ -43,12 +44,16 @@ class Flock {
     public:
         Flock(std::string fname);
         void readFile(std::string fname);
+        void simulate();
 
     private:
+        void computeForces();
         inline void getLineHelper(std::ifstream &f, std::string &line);
+        void writeOutput();
+
         std::vector<Boid> boids; // all boids in simulation
         std::vector<Food> foods; // all food in simulation
-        double bSize;       // default size of a boid)
+        double bSize;       // default size of a boid (spherical radius)
         double nRadius;     // distance a boid can see
         double nNeigbors;   // max number of neighboring boids to process
         double mass;        // mass of a boid
