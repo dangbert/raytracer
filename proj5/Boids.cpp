@@ -59,8 +59,15 @@ void Flock::simulate() {
     cout << nFrames << endl;
 
     for (double t=0; t<duration; t+=dt) {
-        computeForces();
+        computeForces(); // update forces for all boids
+
         for (unsigned int i=0; i<boids.size(); i++) {
+            // cap max force
+            if (boids[i].frc.norm() > MAX_FRC) {
+                boids[i].frc = MAX_FRC * boids[i].frc.normalized();
+            }
+
+            // flip the velocity if the Boid is out of the box
             if (boids[i].inBox()) {
                 boids[i].wasInBox = true;
                 // acceleration -> change in velocity
@@ -71,6 +78,12 @@ void Flock::simulate() {
                 boids[i].vel *= -1;
                 boids[i].wasInBox = false;
             }
+
+            // cap max velocity
+            if (boids[i].vel.norm() > MAX_VEL) {
+                boids[i].vel = MAX_VEL * boids[i].vel.normalized();
+            }
+
             // move the boid:
             // velocity -> change in position:
             boids[i].pos += boids[i].vel * dt;

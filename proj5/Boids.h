@@ -7,6 +7,8 @@
 #include <Eigen/Dense>
 #include <vector>
 using Eigen::Vector3d;
+#define MAX_FRC 15
+#define MAX_VEL 0.022 * MAX_FRC
 
 // forward declaration
 class Flock;
