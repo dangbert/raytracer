@@ -11,6 +11,18 @@ using std::cerr;
 using std::endl;
 
 ////////////////////////////
+//////// Boid class: ///////
+////////////////////////////
+
+/**
+ * returns true if the boid is outside of the box:
+ * [-0.5,0.5]x[-0.25,0.25]x[-0.125,0.125]
+ */
+bool Boid::inBox() {
+    return abs(pos[0]) <= 0.5 && abs(pos[1]) <= 0.25 && abs(pos[2]) <= 0.5;
+}
+
+////////////////////////////
 /////// Flock class: ///////
 ////////////////////////////
 Flock::Flock(std::string fname) {
@@ -49,11 +61,21 @@ void Flock::simulate() {
     for (double t=0; t<duration; t+=dt) {
         computeForces();
         for (unsigned int i=0; i<boids.size(); i++) {
-            // acceleration -> change in velocity
-            boids[i].vel += damping * (boids[i].frc * dt);
+            if (boids[i].inBox()) {
+                boids[i].wasInBox = true;
+                // acceleration -> change in velocity
+                boids[i].vel += damping * (boids[i].frc * dt);
+            }
+            else if (boids[i].wasInBox) {
+                /* only flip the velocity one time (right after it first left the box */
+                boids[i].vel *= -1;
+                boids[i].wasInBox = false;
+            }
+            // move the boid:
             // velocity -> change in position:
             boids[i].pos += boids[i].vel * dt;
         }
+
         writeOutput();
     }
 }

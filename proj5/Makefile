@@ -24,7 +24,7 @@ LDOPTS = $(OPT) $(INCS) $(LIBS)
 #-----------------------------------------
 #-----------------------------------------
 
-.PHONY: run clean
+.PHONY: run clean test
 
 default: $(TARGETS)
 
@@ -35,13 +35,13 @@ run:
 	make && ./fishtank sample.in
 
 test:
-	make && rm -f out && ./fishtank sample.in > out && ./teacher/viewer out
+	make && rm -f out && ./fishtank sample.in > out && ./viewer out
 
 #-----------------------------------------
 #-----------------------------------------
 
 viewer: viewer.cpp
-	$(CC) $(INCS) $(LDOPTS) $(GL_LIB) -c $< -o $@
+	$(CC) $(INCS) $(LDOPTS) $(GL_LIB) $< -o $@
 # (ignore warnings in viewer cause I didn't write it)
 #$(CC) $(CFLAGS) $(INCS) $(LDOPTS) $(GL_LIB) -c $< -o $@
 

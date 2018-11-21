@@ -28,12 +28,14 @@ class Boid {
     public:
         Boid(Vector3d pos=Vector3d(0,0,0), Vector3d vel=Vector3d(0,0,0)) 
             : pos(pos), vel(vel) {};
+        inline bool inBox();
 
     private:
         Vector3d pos;     // current position
         Vector3d vel;     // velocity (speed and direction)
         std::vector<int> neighs; // neighbors of this bird (indices in Flock::boids)
         Vector3d frc;        // force for current timestep
+        bool wasInBox = true;
 };
 
 /**
