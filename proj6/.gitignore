@@ -3,5 +3,4 @@
 *.d
 *.ppm
 *.png
-hide
-shade
+*.jpg

@@ -1,8 +1,19 @@
 #define cimg_display 0
 #include "CImg.h"
 #include <Eigen/Dense>
+#include <cmath>
+#include <iostream>
 using namespace cimg_library;
 using std::string;
+using std::cout;
+using std::endl;
+
+/*
+ * get the corresponding index in a 1-D array for (col, row) in image (width x height)
+ */
+inline int getIndex(int col, int row, int width, int height) {
+    return col * height + row;
+}
 
 /**
  *
@@ -22,9 +33,10 @@ int main(int argc, char *argv[]) {
     Eigen::Vector3d *image = new Eigen::Vector3d[input.width()*input.height()];
     for (unsigned int i=0; i<input.width(); i++) {
         for (unsigned int j=0; j<input.height(); j++) {
-            image[i*input.height()+j][0] = lab(i, j, 0);
-            image[i*input.height()+j][1] = lab(i, j, 1);
-            image[i*input.height()+j][2] = lab(i, j, 2);
+            int index = getIndex(i, j, input.width(), input.height());
+            image[index][0] = lab(i, j, 0);
+            image[index][1] = lab(i, j, 1);
+            image[index][2] = lab(i, j, 2);
         }
     }
 
@@ -44,9 +56,10 @@ int main(int argc, char *argv[]) {
     CImg<double> output(output_width, output_height, input.depth(), input.spectrum(), 0);
     for (unsigned int i=0; i<output.width(); i++) {
         for (unsigned int j=0; j<output.height(); j++) {
-            output(i, j, 0) = image[i*output.height()+j][0];
-            output(i, j, 1) = image[i*output.height()+j][1];
-            output(i, j, 2) = image[i*output.height()+j][2];
+            int index = getIndex(i, j, output.width(), output.height());
+            output(i, j, 0) = image[index][0];
+            output(i, j, 1) = image[index][1];
+            output(i, j, 2) = image[index][2];
         }
     }
 
@@ -58,4 +71,42 @@ int main(int argc, char *argv[]) {
 
     delete [] image;
     return 0;
+}
+
+/**
+ * returns the energy at a specified pixel in an image
+ *
+ * @image: image of pixel values
+ * @col: column index of target pixel
+ * @row: row index of target pixel
+ *
+ */
+double getEnergy(Eigen::Vector3d *image, int col, int row) {
+    int width = image->cols();
+    int height = image->rows();
+    double energy = 0;
+    /* edge cases */
+    if (0 == col) {
+
+    }
+    else if (width-1 == col) {
+
+    }
+    else if (0 == row) {
+
+    }
+    else if (height-1 == row) {
+
+    }
+
+    /* normal case */
+    /* indices in image of pixels 1 to the left, right, up, down of current pixel */
+    int index =  getIndex(col,   row,   width, height);
+    int indexL = getIndex(col-1, row,   width, height);
+    int indexR = getIndex(col+1, row,   width, height);
+    int indexU = getIndex(col,   row-1, width, height);
+    int indexD = getIndex(col,   row+1, width, height);
+    //energy = abs(image[
+
+
 }
