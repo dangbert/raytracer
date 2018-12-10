@@ -8,12 +8,11 @@ using std::string;
 using std::cout;
 using std::endl;
 
-/*
- * get the corresponding index in a 1-D array for (col, row) in image (width x height)
- */
-inline int getIndex(int col, int row, int width, int height) {
-    return col * height + row;
-}
+/* function prototypes */
+double getEnergy(Eigen::Vector3d *image, int col, int row, int width, int height);
+double getDx(Eigen::Vector3d *image, int col, int row, int width, int height);
+double getDy(Eigen::Vector3d *image, int col, int row, int width, int height);
+inline int getIndex(int col, int row, int width, int height);
 
 /**
  *
@@ -30,6 +29,7 @@ int main(int argc, char *argv[]) {
     CImg<double> lab = input.RGBtoLab();
 
     /* convert input image to LAB color space */
+    /* one dimensional array of 3D vectors */
     Eigen::Vector3d *image = new Eigen::Vector3d[input.width()*input.height()];
     for (unsigned int i=0; i<input.width(); i++) {
         for (unsigned int j=0; j<input.height(); j++) {
@@ -50,6 +50,12 @@ int main(int argc, char *argv[]) {
         a path up from there (choosing the min of the 3 options each time)
      4. remove that seam path
      */
+
+    /*
+    I also highly recommend outputing your an image of your energy function
+    mapped to greyscale values. I set each pixel to pow(energy(i,j) / max_energy, 1.0/3.0).
+    */
+
 
 
     /* output image to file */
@@ -73,40 +79,81 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+
+
+/*
+ * get the corresponding index in a 1-D array for (col, row) in image (width x height)
+ */
+inline int getIndex(int col, int row, int width, int height) {
+    return col * height + row;
+}
+
 /**
  * returns the energy at a specified pixel in an image
  *
  * @image: image of pixel values
  * @col: column index of target pixel
  * @row: row index of target pixel
- *
+ * @width: width of @image
+ * @height: height of @image
  */
-double getEnergy(Eigen::Vector3d *image, int col, int row) {
-    int width = image->cols();
-    int height = image->rows();
-    double energy = 0;
-    /* edge cases */
-    if (0 == col) {
+double getEnergy(Eigen::Vector3d *image, int col, int row, int width, int height) {
+    return getDx(image, col, row, width, height) + getDy(image, col, row, width, height);
+}
 
+/**
+ * get the x-derivatve of the pixel in the image at point (col, row)
+ * @Image: image in LAB color space
+ * @col: column index of target pixel
+ * @row: row index of target pixel
+ * @width: width of @image
+ * @height: height of @image
+ */
+double getDx(Eigen::Vector3d *image, int col, int row, int width, int height) {
+    /* edge cases */
+    int divide = 1, index1, index2;
+    if (0 == col) {
+        index1 = getIndex(col, row, width, height);
+        index2 = getIndex(col+1, row, width, height);
     }
     else if (width-1 == col) {
-
+        index1 = getIndex(col-1, row, width, height);
+        index2 = getIndex(col, row, width, height);
     }
-    else if (0 == row) {
+    else {
+        index1 = getIndex(col-1, row, width, height);
+        index2 = getIndex(col+1, row, width, height);
+        divide = 2.0;
+    }
+    // use component 0 because that is the "lightness" value
+    return abs(image[index2][0] - image[index1][0]) / (double) divide;
+}
 
+/**
+ *
+ * get the y-derivatve of the pixel in the image at point (col, row)
+ * @Image: image in LAB color space
+ * @col: column index of target pixel
+ * @row: row index of target pixel
+ * @width: width of @image
+ * @height: height of @image
+ */
+double getDy(Eigen::Vector3d *image, int col, int row, int width, int height) {
+    /* edge cases */
+    int divide = 1, index1, index2;
+    if (0 == row) {
+        index1 = getIndex(col, row, width, height);
+        index2 = getIndex(col, row+1, width, height);
     }
     else if (height-1 == row) {
-
+        index1 = getIndex(col, row-1, width, height);
+        index2 = getIndex(col, row, width, height);
     }
-
-    /* normal case */
-    /* indices in image of pixels 1 to the left, right, up, down of current pixel */
-    int index =  getIndex(col,   row,   width, height);
-    int indexL = getIndex(col-1, row,   width, height);
-    int indexR = getIndex(col+1, row,   width, height);
-    int indexU = getIndex(col,   row-1, width, height);
-    int indexD = getIndex(col,   row+1, width, height);
-    //energy = abs(image[
-
-
+    else {
+        index1 = getIndex(col, row-1, width, height);
+        index2 = getIndex(col, row+1, width, height);
+        divide = 2.0;
+    }
+    // use component 0 because that is the "lightness" value
+    return abs(image[index2][0] - image[index1][0]) / (double) divide;
 }
