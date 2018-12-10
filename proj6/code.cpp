@@ -9,6 +9,7 @@ using std::cout;
 using std::endl;
 
 /* function prototypes */
+void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image);
 double getEnergy(Eigen::Vector3d *image, int col, int row, int width, int height);
 double getDx(Eigen::Vector3d *image, int col, int row, int width, int height);
 double getDy(Eigen::Vector3d *image, int col, int row, int width, int height);
@@ -40,7 +41,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    /******************************************/
     /* do work here */
+    /* display the energy of the original image */
+    viewEnergy(image, input.width(), input.height(), output_image);
+
     /*
      (greedy algorithm )
      look at a set of potential seams, and remove the most optimal seam from the image
@@ -51,12 +56,8 @@ int main(int argc, char *argv[]) {
      4. remove that seam path
      */
 
-    /*
-    I also highly recommend outputing your an image of your energy function
-    mapped to greyscale values. I set each pixel to pow(energy(i,j) / max_energy, 1.0/3.0).
-    */
 
-
+    /******************************************/
 
     /* output image to file */
     CImg<double> output(output_width, output_height, input.depth(), input.spectrum(), 0);
@@ -79,13 +80,47 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-
-
 /*
  * get the corresponding index in a 1-D array for (col, row) in image (width x height)
  */
 inline int getIndex(int col, int row, int width, int height) {
     return col * height + row;
+}
+
+/**
+ * create an image showing the energy of the pixels in the provided image
+ * and write it to a file
+ *
+ * @image: image of pixel values
+ * @width: width of @image
+ * @height: height of @image
+ */
+void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image) {
+    string fname(output_image);
+    fname.insert(0, "out-energy-");
+    /* populate energy matrix */
+    double energy[width * height];
+    double max = 0.0;
+    for (unsigned int i=0; i<width; i++) {
+        for (unsigned int j=0; j<height; j++) {
+            int index = getIndex(i, j, width, height);
+            energy[index] = getEnergy(image, i, j, width, height);
+            max = std::max<double>(max, energy[index]);
+        }
+    }
+
+    cout << "max energy is " << max << endl;
+    /* write to output image */
+    CImg<float> output(width, height, 1, 3);
+    for (unsigned int i=0; i<output.width(); i++) {
+        for (unsigned int j=0; j<output.height(); j++) {
+            int index = getIndex(i, j, output.width(), output.height());
+            output(i, j, 0) = 255.0*pow(energy[index]/max, 1/3.0);
+            output(i, j, 1) = 255.0*pow(energy[index]/max, 1/3.0);
+            output(i, j, 2) = 255.0*pow(energy[index]/max, 1/3.0);
+        }
+    }
+    output.save_png(fname.c_str());
 }
 
 /**
