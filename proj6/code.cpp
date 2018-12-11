@@ -3,17 +3,20 @@
 #include <Eigen/Dense>
 #include <cmath>
 #include <iostream>
+#include <limits>
 using namespace cimg_library;
 using std::string;
 using std::cout;
 using std::endl;
 
 /* function prototypes */
-void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image);
+int getIndex(int col, int row, int width, int height);
+Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int height);
+
 double getEnergy(Eigen::Vector3d *image, int col, int row, int width, int height);
 double getDx(Eigen::Vector3d *image, int col, int row, int width, int height);
 double getDy(Eigen::Vector3d *image, int col, int row, int width, int height);
-inline int getIndex(int col, int row, int width, int height);
+void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image);
 
 /**
  *
@@ -46,16 +49,12 @@ int main(int argc, char *argv[]) {
     /* display the energy of the original image */
     viewEnergy(image, input.width(), input.height(), output_image);
 
-    /*
-     (greedy algorithm )
-     look at a set of potential seams, and remove the most optimal seam from the image
-     1. compute 2d array of energy (at each pixel) 
-     2. compute 2d array of seam cost (at each pixel)
-     3. start from bottom row and find the pixel with min seam cost, and trace
-        a path up from there (choosing the min of the 3 options each time)
-     4. remove that seam path
-     */
-
+    /* remove seams */
+    //int curWidth
+    //int curHeight = input.height();
+    for (int curWidth = input.width(); curWidth > output_width; curWidth--) {
+        image = removeVerticalSeam(image, curWidth, input.height());
+    }
 
     /******************************************/
 
@@ -83,21 +82,20 @@ int main(int argc, char *argv[]) {
 /*
  * get the corresponding index in a 1-D array for (col, row) in image (width x height)
  */
-inline int getIndex(int col, int row, int width, int height) {
+int getIndex(int col, int row, int width, int height) {
     return col * height + row;
 }
 
-/**
- * create an image showing the energy of the pixels in the provided image
- * and write it to a file
- *
- * @image: image of pixel values
- * @width: width of @image
- * @height: height of @image
+/*
+ (greedy algorithm )
+ look at a set of potential seams, and remove the most optimal seam from the image
+ 1. compute 2d array of energy (at each pixel) 
+ 2. compute 2d array of seam cost (at each pixel)
+ 3. start from bottom row and find the pixel with min seam cost, and trace
+    a path up from there (choosing the min of the 3 options each time)
+ 4. remove that seam path
  */
-void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image) {
-    string fname(output_image);
-    fname.insert(0, "out-energy-");
+Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int height) {
     /* populate energy matrix */
     double energy[width * height];
     double max = 0.0;
@@ -109,18 +107,65 @@ void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_imag
         }
     }
 
-    cout << "max energy is " << max << endl;
-    /* write to output image */
-    CImg<float> output(width, height, 1, 3);
-    for (unsigned int i=0; i<output.width(); i++) {
-        for (unsigned int j=0; j<output.height(); j++) {
-            int index = getIndex(i, j, output.width(), output.height());
-            output(i, j, 0) = 255.0*pow(energy[index]/max, 1/3.0);
-            output(i, j, 1) = 255.0*pow(energy[index]/max, 1/3.0);
-            output(i, j, 2) = 255.0*pow(energy[index]/max, 1/3.0);
+    /* compute cumulative minimum energy (cost) */
+    double *M = new double[width * height];
+    // first row is trivial
+    for (unsigned int i=0; i<width; i++) {
+        int index = getIndex(i, 0, width, height);
+        M[index] = energy[index];
+    }
+
+    // compute for rest of rows
+    for (unsigned int col=1; col<width; col++) {
+        for (unsigned int row=0; row<height; row++) {
+            int index = getIndex(col, row, width, height);
+
+            // compute the cost of the possible connections above (up to three)
+            double C[3] = {std::numeric_limits<double>::max(),
+                std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
+            if (0 != col)
+                C[0] = M[getIndex(col-1, row-1, width, height)];
+            C[1] = M[getIndex(col, row-1, width, height)];
+            if (width-1 != col)
+                C[2] = M[getIndex(col+1, row-1, width, height)];
+
+            // store the cumulative min energy for this pixel
+            M[index] = energy[index] + std::min<double>(std::min<double>(C[0], C[1]), C[2]);
         }
     }
-    output.save_png(fname.c_str());
+
+    /* find the cheapest connected path (the seam to remove) */
+    int *seam = new int[height]; // stores selected col index for each row of image
+    int leftCol = 0, rightCol = width-1; // range of columns to search
+    for (unsigned int row=height-1; row!=0; row--) {
+        seam[row] = leftCol;     // column with smallest M value in this row
+        for (unsigned int col=leftCol; col<=rightCol; col++) {
+            int index = getIndex(col, row, width, height);
+            if (M[index] < M[getIndex(seam[row], col, width, height)])
+                seam[row] = col;
+        }
+        // update leftCol and rightCol for next row's search
+        leftCol = std::max(0, seam[row]-1);
+        rightCol = std::min(width-1, seam[row]+1);
+    }
+
+    /* TODO: remove seam from image */
+    Eigen::Vector3d *newImage = new Eigen::Vector3d[(width-1)*height];
+    for (unsigned int row=0; row<height; row++) {
+        double minCost = std::numeric_limits<double>::max();
+        int offset = 0; // column offset (once seam location in row is passed)
+        for (unsigned int col=0; col<width-1; col++) {
+            if (col == seam[row]) {
+                // we hit the pixel in the seam (use the offset to skip it)
+                offset++;
+            }
+            for (unsigned int k=0; k<3; k++) {
+                newImage[getIndex(col, row, width, height)][k] = image[getIndex(col+offset, row, width, height)][k];
+            }
+        }
+    }
+    delete[] image;
+    return newImage;
 }
 
 /**
@@ -191,4 +236,41 @@ double getDy(Eigen::Vector3d *image, int col, int row, int width, int height) {
     }
     // use component 0 because that is the "lightness" value
     return abs(image[index2][0] - image[index1][0]) / (double) divide;
+}
+
+/**
+ * create an image showing the energy of the pixels in the provided image
+ * and write it to a file
+ *
+ * @image: image of pixel values
+ * @width: width of @image
+ * @height: height of @image
+ * @output_image: name of the file to output ("out-energy-" will be prepended to it)
+ */
+void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image) {
+    string fname(output_image);
+    fname.insert(0, "out-energy-");
+    /* populate energy matrix */
+    double energy[width * height];
+    double max = 0.0;
+    for (unsigned int i=0; i<width; i++) {
+        for (unsigned int j=0; j<height; j++) {
+            int index = getIndex(i, j, width, height);
+            energy[index] = getEnergy(image, i, j, width, height);
+            max = std::max<double>(max, energy[index]);
+        }
+    }
+
+    cout << "max energy is " << max << endl;
+    /* write to output image */
+    CImg<float> output(width, height, 1, 3);
+    for (unsigned int i=0; i<output.width(); i++) {
+        for (unsigned int j=0; j<output.height(); j++) {
+            int index = getIndex(i, j, output.width(), output.height());
+            output(i, j, 0) = 255.0*pow(energy[index]/max, 1/3.0);
+            output(i, j, 1) = 255.0*pow(energy[index]/max, 1/3.0);
+            output(i, j, 2) = 255.0*pow(energy[index]/max, 1/3.0);
+        }
+    }
+    output.save_png(fname.c_str());
 }
