@@ -97,12 +97,12 @@ int getIndex(int col, int row, int width, int height) {
  */
 Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int height) {
     /* populate energy matrix */
-    double energy[width * height];
+    double *energy = new double[width * height];
     double max = 0.0;
-    for (unsigned int i=0; i<width; i++) {
-        for (unsigned int j=0; j<height; j++) {
-            int index = getIndex(i, j, width, height);
-            energy[index] = getEnergy(image, i, j, width, height);
+    for (unsigned int row=0; row<height; row++) {
+        for (unsigned int col=0; col<width; col++) {
+            int index = getIndex(col, row, width, height);
+            energy[index] = getEnergy(image, col, row, width, height);
             max = std::max<double>(max, energy[index]);
         }
     }
@@ -110,24 +110,24 @@ Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int heigh
     /* compute cumulative minimum energy (cost) */
     double *M = new double[width * height];
     // first row is trivial
-    for (unsigned int i=0; i<width; i++) {
-        int index = getIndex(i, 0, width, height);
+    for (unsigned int col=0; col<width; col++) {
+        int index = getIndex(col, 0, width, height);
         M[index] = energy[index];
     }
 
-    // compute for rest of rows
-    for (unsigned int col=1; col<width; col++) {
-        for (unsigned int row=0; row<height; row++) {
+    // compute M for rest of rows (note that row traversal must be the outer loop)
+    for (unsigned int row=1; row<height; row++) {
+        for (unsigned int col=0; col<width; col++) {
             int index = getIndex(col, row, width, height);
 
             // compute the cost of the possible connections above (up to three)
             double C[3] = {std::numeric_limits<double>::max(),
                 std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
             if (0 != col)
-                C[0] = M[getIndex(col-1, row-1, width, height)];
-            C[1] = M[getIndex(col, row-1, width, height)];
+                C[0] = M[getIndex(col-1, row-1, width, height)]; // diagonally up left
+            C[1] = M[getIndex(col, row-1, width, height)]; // straight up
             if (width-1 != col)
-                C[2] = M[getIndex(col+1, row-1, width, height)];
+                C[2] = M[getIndex(col+1, row-1, width, height)]; // diagonally up right
 
             // store the cumulative min energy for this pixel
             M[index] = energy[index] + std::min<double>(std::min<double>(C[0], C[1]), C[2]);
@@ -137,11 +137,11 @@ Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int heigh
     /* find the cheapest connected path (the seam to remove) */
     int *seam = new int[height]; // stores selected col index for each row of image
     int leftCol = 0, rightCol = width-1; // range of columns to search
-    for (unsigned int row=height-1; row!=0; row--) {
+    for (int row=height-1; row>=0; row--) {
         seam[row] = leftCol;     // column with smallest M value in this row
         for (unsigned int col=leftCol; col<=rightCol; col++) {
             int index = getIndex(col, row, width, height);
-            if (M[index] < M[getIndex(seam[row], col, width, height)])
+            if (M[index] < M[getIndex(seam[row], row, width, height)])
                 seam[row] = col;
         }
         // update leftCol and rightCol for next row's search
@@ -149,9 +149,38 @@ Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int heigh
         rightCol = std::min(width-1, seam[row]+1);
     }
 
+    /* for debugging */
+    /*
+    cout << "\nenergy:\n";
+    for (unsigned int row=0; row<height; row++) {
+        for (unsigned int col=0; col<width; col++) {
+            printf("%6.3f ", energy[getIndex(col, row, width, height)]);
+        }
+        printf("\n");
+    }
+
+    cout << "\nM:\n";
+    for (unsigned int row=0; row<height; row++) {
+        for (unsigned int col=0; col<width; col++) {
+            if (col == seam[row]) {
+                printf("%5.3f* ", M[getIndex(col, row, width, height)]);
+                continue;
+            }
+            printf("%6.3f ", M[getIndex(col, row, width, height)]);
+        }
+        printf("\n");
+    }
+    cout << "\nSeam:\n";
+    for (unsigned int row=0; row<height; row++) {
+        cout << seam[row] << endl;
+    }
+    //exit(1);
+    */
+
+
     std::string fname = std::to_string(width) + ".jpg";
     char *outName = &fname[0u];
-    viewEnergy(image, width, height, outName, seam);
+    ///viewEnergy(image, width, height, outName, seam); // for debugging
     /* remove seam from image */
     Eigen::Vector3d *newImage = new Eigen::Vector3d[(width-1)*height];
     for (unsigned int row=0; row<height; row++) {
@@ -168,6 +197,9 @@ Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int heigh
         }
     }
     delete[] image;
+    delete[] energy;
+    delete[] M;
+    delete[] seam;
     return newImage;
 }
 
@@ -267,7 +299,6 @@ void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_imag
         }
     }
 
-    cout << "max energy is " << max << endl;
     /* write to output image */
     CImg<float> output(width, height, 1, 3);
     for (unsigned int i=0; i<output.width(); i++) {

@@ -1,6 +1,7 @@
 CC = g++
 #CFLAGS = -g -Wall -Wextra -Wpedantic -pedantic-errors -O2
 CFLAGS = -g -O2
+#CFLAGS = -g
 
 NAME = seamcarving
 #OBJS = main.o io.o
@@ -26,9 +27,9 @@ clean:
 
 test:
 	 make
-	 ./$(NAME) inputs/house.jpg out-house.jpg 512 384  # was 512x384
-	 ./$(NAME) inputs/up.jpg out-up.jpg 640 960        # was 640x960
-	 ./$(NAME) inputs/dog.jpg out-dog.jpg 500 420      # was 500x420
+	 ./$(NAME) inputs/house.jpg out-house.jpg 312 384 # was 512x384
+	./$(NAME) inputs/up.jpg out-up.jpg 240 960        # was 640x960
+	./$(NAME) inputs/dog.jpg out-dog.jpg 300 420      # was 500x420
 
  #./$(NAME) inputs/house.jpg out-house.jpg 412 384 # was 512x384
  #./$(NAME) inputs/up.jpg out-up.jpg 640 400    # was 640x960
