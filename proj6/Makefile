@@ -27,9 +27,13 @@ clean:
 
 test:
 	 make
-	 ./$(NAME) inputs/house.jpg out-house.jpg 312 384 # was 512x384
-	./$(NAME) inputs/up.jpg out-up.jpg 240 960        # was 640x960
-	./$(NAME) inputs/dog.jpg out-dog.jpg 300 420      # was 500x420
+	./$(NAME) inputs/house.jpg out-house_312x384.jpg 312 384 # was 512x384
+	./$(NAME) inputs/house.jpg out-house_400x200.jpg 400 200 # was 512x384
+
+	./$(NAME) inputs/up.jpg out-up_240x960.jpg 240 960       # was 640x960
+	./$(NAME) inputs/up.jpg out-up_640x460.jpg 640 460       # was 640x960
+
+	./$(NAME) inputs/dog.jpg out-dog_400x320.jpg 400 320     # was 500x420
 
  #./$(NAME) inputs/house.jpg out-house.jpg 412 384 # was 512x384
  #./$(NAME) inputs/up.jpg out-up.jpg 640 400    # was 640x960

@@ -9,11 +9,12 @@ Dan Engbert (end1@umbc.edu), CMSC 435 Fall 18
 ## How to Run:
 ````bash
 make
-./seamcarving inputs/up.jpg out-up.jpg 740 860        # was 640x960
-./seamcarving inputs/dog.jpg out-dog.jpg 400 320      # was 500x420
+make test  # tests the program on a couple test images with various parameters
 
 # USAGE:
-# ./seamcarving <input_image> <output_image> <output_width> <output_height>
+#   ./seamcarving <input_image> <output_image> <output_width> <output_height>
+# EXAMPLE:
+#   ./seamcarving inputs/up.jpg out-up_640x460.jpg 640 460
 ````
 
 

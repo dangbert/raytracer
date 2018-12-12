@@ -12,6 +12,7 @@ using std::endl;
 /* function prototypes */
 int getIndex(int col, int row, int width, int height);
 Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int height);
+Eigen::Vector3d *transposeImage(Eigen::Vector3d *image, int width, int height);
 
 double getEnergy(Eigen::Vector3d *image, int col, int row, int width, int height);
 double getDx(Eigen::Vector3d *image, int col, int row, int width, int height);
@@ -45,24 +46,29 @@ int main(int argc, char *argv[]) {
     }
 
     /******************************************/
-    /* do work here */
     /* display the energy of the original image */
     ///viewEnergy(image, input.width(), input.height(), output_image);
 
-    /* remove seams */
-    //int curWidth
-    //int curHeight = input.height();
-    for (int curWidth = input.width(); curWidth > output_width; curWidth--) {
+    /* remove vertial seams */
+    int curWidth = input.width(), curHeight = input.height();
+    for (; curWidth > output_width; curWidth--) {
         image = removeVerticalSeam(image, curWidth, input.height());
     }
 
+    /* remove horizontal seams */
+    image = transposeImage(image, curWidth, curHeight);
+    for (; curHeight > output_height; curHeight--) {
+        // note that we reverse the params for width, height here (b/c image was tranposed)
+        image = removeVerticalSeam(image, curHeight, curWidth);
+    }
+    image = transposeImage(image, curHeight, curWidth);
     /******************************************/
 
     /* output image to file */
     CImg<double> output(output_width, output_height, input.depth(), input.spectrum(), 0);
     for (unsigned int i=0; i<output.width(); i++) {
         for (unsigned int j=0; j<output.height(); j++) {
-            int index = getIndex(i, j, output.width(), output.height());
+            int index = getIndex(i, j, output_width, output_height);
             output(i, j, 0) = image[index][0];
             output(i, j, 1) = image[index][1];
             output(i, j, 2) = image[index][2];
@@ -87,16 +93,16 @@ int getIndex(int col, int row, int width, int height) {
 }
 
 /*
- (greedy algorithm )
- look at a set of potential seams, and remove the most optimal seam from the image
- 1. compute 2d array of energy (at each pixel) 
- 2. compute 2d array of seam cost (at each pixel)
- 3. start from bottom row and find the pixel with min seam cost, and trace
-    a path up from there (choosing the min of the 3 options each time)
- 4. remove that seam path
+ * removes one vertical seam from @image
+ * deallocates the memory for @image
+ * and returns a pointer to a newly allocated image with (width is shrunk by 1)
+ *
+ * @image: image of pixel values
+ * @width: width of @image
+ * @height: height of @image
  */
 Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int height) {
-    /* populate energy matrix */
+    /* populate energy matrix (with energy of each pixel) */
     double *energy = new double[width * height];
     double max = 0.0;
     for (unsigned int row=0; row<height; row++) {
@@ -107,14 +113,13 @@ Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int heigh
         }
     }
 
-    /* compute cumulative minimum energy (cost) */
+    /* compute cumulative minimum energy (cost at each pixel) */
     double *M = new double[width * height];
     // first row is trivial
     for (unsigned int col=0; col<width; col++) {
         int index = getIndex(col, 0, width, height);
         M[index] = energy[index];
     }
-
     // compute M for rest of rows (note that row traversal must be the outer loop)
     for (unsigned int row=1; row<height; row++) {
         for (unsigned int col=0; col<width; col++) {
@@ -135,10 +140,12 @@ Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int heigh
     }
 
     /* find the cheapest connected path (the seam to remove) */
-    int *seam = new int[height]; // stores selected col index for each row of image
+    // start from bottom row, find the pixel with min seam cost, and trace
+    // a path up from there (choosing the min of the 2 to 3 options each time)
+    int *seam = new int[height];         // stores selected col index for each row of image
     int leftCol = 0, rightCol = width-1; // range of columns to search
     for (int row=height-1; row>=0; row--) {
-        seam[row] = leftCol;     // column with smallest M value in this row
+        seam[row] = leftCol;             // column with smallest M value in this row
         for (unsigned int col=leftCol; col<=rightCol; col++) {
             int index = getIndex(col, row, width, height);
             if (M[index] < M[getIndex(seam[row], row, width, height)])
@@ -149,39 +156,11 @@ Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int heigh
         rightCol = std::min(width-1, seam[row]+1);
     }
 
-    /* for debugging */
-    /*
-    cout << "\nenergy:\n";
-    for (unsigned int row=0; row<height; row++) {
-        for (unsigned int col=0; col<width; col++) {
-            printf("%6.3f ", energy[getIndex(col, row, width, height)]);
-        }
-        printf("\n");
-    }
-
-    cout << "\nM:\n";
-    for (unsigned int row=0; row<height; row++) {
-        for (unsigned int col=0; col<width; col++) {
-            if (col == seam[row]) {
-                printf("%5.3f* ", M[getIndex(col, row, width, height)]);
-                continue;
-            }
-            printf("%6.3f ", M[getIndex(col, row, width, height)]);
-        }
-        printf("\n");
-    }
-    cout << "\nSeam:\n";
-    for (unsigned int row=0; row<height; row++) {
-        cout << seam[row] << endl;
-    }
-    //exit(1);
-    */
-
-
+    /* return a new image (remove seam from original) */
+    /* create new image and return it */
     std::string fname = std::to_string(width) + ".jpg";
     char *outName = &fname[0u];
     ///viewEnergy(image, width, height, outName, seam); // for debugging
-    /* remove seam from image */
     Eigen::Vector3d *newImage = new Eigen::Vector3d[(width-1)*height];
     for (unsigned int row=0; row<height; row++) {
         double minCost = std::numeric_limits<double>::max();
@@ -200,6 +179,36 @@ Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int heigh
     delete[] energy;
     delete[] M;
     delete[] seam;
+    return newImage;
+}
+
+/**
+ * returns an image that is the transpose of @image
+ * (deallocates @image and returns a pointer to the new image)
+ * ///transposes @image in place (works because it's really 1D array)
+ * ///afterwards treat the new width as @height, and the new height as @width
+ *
+ * @image: image of pixel values
+ * @width: width of @image
+ * @height: height of @image
+ */
+Eigen::Vector3d *transposeImage(Eigen::Vector3d *image, int width, int height) {
+    Eigen::Vector3d *newImage = new Eigen::Vector3d[width * height];
+    int origIndex, newIndex;
+    //Eigen::Vector3d tmp;
+    for (unsigned int row=0; row<height; row++) {
+        for (unsigned int col=0; col<width; col++) {
+            origIndex = getIndex(col, row, width, height);
+            newIndex = getIndex(row, col, height, width);
+
+            // swap the 2 pixels
+            //tmp = image[origIndex];
+            //image[origIndex] = image[newIndex];
+            //image[origIndex] = tmp;
+            newImage[newIndex] = image[origIndex];
+        }
+    }
+    delete[] image;
     return newImage;
 }
 
@@ -275,12 +284,14 @@ double getDy(Eigen::Vector3d *image, int col, int row, int width, int height) {
 
 /**
  * create an image showing the energy of the pixels in the provided image
- * and write it to a file
+ * and write it to a file.
+ * If @seam is not NULL, then the seam will be drawn on the output image in yellow
  *
  * @image: image of pixel values
  * @width: width of @image
  * @height: height of @image
  * @output_image: name of the file to output ("out-energy-" will be prepended to it)
+ * @seam: array of length @height (or NULL
  */
 void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image, int* seam) {
     string fname(output_image);
