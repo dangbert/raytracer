@@ -16,7 +16,7 @@ Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int heigh
 double getEnergy(Eigen::Vector3d *image, int col, int row, int width, int height);
 double getDx(Eigen::Vector3d *image, int col, int row, int width, int height);
 double getDy(Eigen::Vector3d *image, int col, int row, int width, int height);
-void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image);
+void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image, int* seam=NULL);
 
 /**
  *
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     /******************************************/
     /* do work here */
     /* display the energy of the original image */
-    viewEnergy(image, input.width(), input.height(), output_image);
+    ///viewEnergy(image, input.width(), input.height(), output_image);
 
     /* remove seams */
     //int curWidth
@@ -149,7 +149,10 @@ Eigen::Vector3d *removeVerticalSeam(Eigen::Vector3d *image, int width, int heigh
         rightCol = std::min(width-1, seam[row]+1);
     }
 
-    /* TODO: remove seam from image */
+    std::string fname = std::to_string(width) + ".jpg";
+    char *outName = &fname[0u];
+    viewEnergy(image, width, height, outName, seam);
+    /* remove seam from image */
     Eigen::Vector3d *newImage = new Eigen::Vector3d[(width-1)*height];
     for (unsigned int row=0; row<height; row++) {
         double minCost = std::numeric_limits<double>::max();
@@ -247,11 +250,14 @@ double getDy(Eigen::Vector3d *image, int col, int row, int width, int height) {
  * @height: height of @image
  * @output_image: name of the file to output ("out-energy-" will be prepended to it)
  */
-void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image) {
+void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_image, int* seam) {
     string fname(output_image);
-    fname.insert(0, "out-energy-");
+    if (seam == NULL)
+        fname.insert(0, "out-energy-");
+    else
+        fname.insert(0, "out-seam-");
     /* populate energy matrix */
-    double energy[width * height];
+    double *energy = new double[width * height];
     double max = 0.0;
     for (unsigned int i=0; i<width; i++) {
         for (unsigned int j=0; j<height; j++) {
@@ -270,7 +276,14 @@ void viewEnergy(Eigen::Vector3d *image, int width, int height, char* output_imag
             output(i, j, 0) = 255.0*pow(energy[index]/max, 1/3.0);
             output(i, j, 1) = 255.0*pow(energy[index]/max, 1/3.0);
             output(i, j, 2) = 255.0*pow(energy[index]/max, 1/3.0);
+
+            if (seam != NULL && i == seam[j]) {
+                output(i, j, 0) = 255.0;
+                output(i, j, 1) = 255.0;
+                output(i, j, 2) = 0;
+            }
         }
     }
     output.save_png(fname.c_str());
+    delete[] energy;
 }
