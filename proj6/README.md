@@ -5,6 +5,9 @@ Dan Engbert (end1@umbc.edu), CMSC 435 Fall 18
   * Reads an input file about fish inital locations and velocities
   * Outputs fish locations at each timestep of the simulation
 
+## Extra Credit:
+* Created webpage: http://engbert.me/graphics/
+
 
 ## How to Run:
 ````bash
