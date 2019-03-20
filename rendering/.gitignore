@@ -1,8 +1,4 @@
-*~
 *.o
-*.d
-*.a
-*.ppm
-*.png
-hide
-shade
+# executables
+raytracer
+rasterizer

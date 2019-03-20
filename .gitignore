@@ -1,7 +1,2 @@
 # libraries
-Eigen/
-LinearSolver/
-
-# executables
-rendering/raytracer
-rendering/rasterizer
+libraries/

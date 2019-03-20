@@ -9,7 +9,7 @@ RAS_OUT = rasterizer
 RAS_DRIVER = main-rasterizer.cpp
 
 DEPS = *.h
-INCLUDE = -I. -I/usr/include/eigen3/
+INCLUDE = -I/usr/include/eigen3/ -I../libraries
 
 # build executables:
 all: $(RAY_OUT) $(RAS_OUT)
@@ -21,6 +21,7 @@ $(RAS_OUT): $(RAS_DRIVER) $(OBJS)
 
 # build object files for each cpp file
 # $@ is the target, $^ are the dependencies
+# (perhaps not the most efficient)
 %.o: %.cpp $(DEPS)
 	$(CC) $(INCLUDE) -c -o $@ $< $(CFLAGS)
 
