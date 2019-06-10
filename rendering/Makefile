@@ -27,7 +27,7 @@ $(RAS_OUT): $(RAS_DRIVER) $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o $(OUT)
+	rm -f *.o $(RAS_OUT) $(RAY_OUT)
 
 
 ##### old makefile system:####
