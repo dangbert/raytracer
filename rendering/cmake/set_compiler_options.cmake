@@ -108,7 +108,8 @@ function(_sco_add_sanitize target_name)
     option("${upper_project_name}_ENABLE_SANITIZE" "Enable sanitize" FALSE)
 
     if(${upper_project_name}_ENABLE_SANITIZE)
-        target_compile_definitions("${target_name}" PRIVATE _FORTIFY_SOURCE=0)
+        # TODO: why does this fail on Ubuntu 20?
+        #target_compile_definitions("${target_name}" PRIVATE _FORTIFY_SOURCE=0)
 
         _sco_add_compile_options("${target_name}" -fno-sanitize-recover=all)
         _sco_add_compile_and_link_options("${target_name}" PRIVATE PUBLIC
@@ -123,8 +124,9 @@ function(_sco_add_sanitize target_name)
             _sco_add_link_options("${target_name}" PUBLIC -shared-libsan)
         endif()
     else()
-        target_compile_definitions("${target_name}" PRIVATE
-            $<$<NOT:$<CONFIG:Debug>>:_FORTIFY_SOURCE=2>)
+        # TODO: why does this fail on Ubuntu 20?
+        #target_compile_definitions("${target_name}" PRIVATE
+        #    $<$<NOT:$<CONFIG:Debug>>:_FORTIFY_SOURCE=2>)
     endif()
 endfunction()
 

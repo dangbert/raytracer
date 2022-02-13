@@ -1,3 +1,4 @@
+#!/bin/bash
 set -euC
 
 
@@ -5,8 +6,8 @@ cd "$(dirname "${0}")"
 
 
 readonly config=Release
-readonly project_name=project
-readonly source_path="${PWD}/../${project_name}"
+readonly project_name=rendering
+readonly source_path="${PWD}"
 readonly build_path="${PWD}/build/${config}"
 readonly install_path="${build_path}/install"
 
@@ -26,7 +27,8 @@ if ! test -e "${build_path}"; then
         "-DCMAKE_CXX_COMPILER=g++" \
         "-DCMAKE_INSTALL_PREFIX=${install_path}" \
         -DBUILD_SHARED_LIBS=TRUE \
-        -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+        -DEigen3_DIR=../libraries/eigen-3.4.0_install
 fi
 
 

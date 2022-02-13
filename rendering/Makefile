@@ -9,7 +9,8 @@ RAS_OUT = rasterizer
 RAS_DRIVER = main-rasterizer.cpp
 
 DEPS = *.h
-INCLUDE = -I/usr/include/eigen3/ -I../libraries
+#INCLUDE = -I/usr/include/eigen3/ -I../libraries -I../eigen-3.2.2
+INCLUDE = -I../libraries/eigen-3.4.0
 
 # build executables:
 all: $(RAY_OUT) $(RAS_OUT)
