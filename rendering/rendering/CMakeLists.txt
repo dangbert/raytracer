@@ -13,8 +13,9 @@ add_executable(
     src/main-raytracer.cpp
     src/Settings.cpp
     src/Surfaces.cpp
-    src/Test.cpp
     src/Tracer.cpp
+    src/Rasterizer.cpp # needed for Test.cpp to compile
+    src/Test.cpp
 )
 target_link_libraries (raytracer Eigen3::Eigen)
 set_compiler_options(raytracer)
@@ -25,6 +26,7 @@ add_executable(
     src/Rasterizer.cpp
     src/Settings.cpp
     src/Surfaces.cpp
+    src/Tracer.cpp # needed for Test.cpp to compile
     src/Test.cpp
 )
 target_link_libraries (rasterizer Eigen3::Eigen)

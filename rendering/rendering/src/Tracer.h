@@ -21,7 +21,8 @@ class Test;
 class Ray {
     friend class Test;
     public:
-        Ray(Eigen::Vector3d eye, Eigen::Vector3d dir) : eye(eye), dir(dir) {};
+        Ray(Eigen::Vector3d _eye, Eigen::Vector3d _dir)
+            : eye(_eye), dir(_dir) {}
         friend std::ostream &operator<<(std::ostream &sout, const Ray &ray);
 
         Eigen::Vector3d eye;   // eye
@@ -35,9 +36,9 @@ class Ray {
 class HitRecord {
     friend class Test;
     public:
-        HitRecord(SurfaceType sType, double t, double dist=-1, Vector3d point=Vector3d(0,0,0), double a=0, double B=0, double g=0, double triIndex=-1, double surfIndex=-1)
-            : sType(sType), t(t), dist(dist), point(point), a(a), B(B), g(g),
-            triIndex(triIndex), surfIndex(surfIndex) {};
+        HitRecord(SurfaceType _sType, double _t, double _dist=-1, Vector3d _point=Vector3d(0,0,0), double _a=0, double _B=0, double _g=0, int _triIndex=-1, int _surfIndex=-1)
+            : sType(_sType), t(_t), dist(_dist), point(_point), a(_a), B(_B), g(_g),
+            triIndex(_triIndex), surfIndex(_surfIndex) {}
         friend std::ostream &operator<<(std::ostream &sout, const HitRecord &hit);
 
         SurfaceType sType; // enum surface type
@@ -48,6 +49,9 @@ class HitRecord {
         double B;          // triangle intersection Beta value
         double g;          // triangle intersectiong gamma value
         // TODO: store pointer to material intersected with?
+        // TODO: instead of using -1 do something like:
+        //   std::optional<int> triIndex
+        //   then later if (triIndex.has_value()) and triIndex.value()
         int triIndex;      // index of triangle intersected (if sTYPE == POLYGON)
         int surfIndex;     // index of the surface intersected
 };

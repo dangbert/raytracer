@@ -21,19 +21,28 @@ class HitRecord;
 /**
  *  class for geometric surfaces to derive from
  *  a surface should not be modified after creating it
+ *  TOOD: consider making what is needed public,
+ *    so client apps like Raytracer and Rasterizer can access what they need
+ *    (without being friends)
  */
 class Surface {
     friend class Test;
     friend class RayTracer;
     friend class Rasterizer;
     public:
-        Surface(Material *matr) : matr(matr) {};
+        Surface(Material *_matr) : matr(_matr) {}
         virtual ~Surface() {} // (needed so we can call delete on a *Surface)
+        Surface(const Surface &other) = default;
         // TODO: consider adding params t0 and t1 (hither) to specify bounds
-        virtual HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const = 0;
+        virtual HitRecord intersect(const Ray &ray, double d0=0, double d1=-1, bool debug=false) const = 0;
         virtual Vector3d getNormal(HitRecord hit, bool interpolate=false) const = 0;
 
-     protected:
+    protected:
+        // TOOD: consider writing all member variables in my classes like m_matr
+        //   (also removes need to use underscore in constructors for shadow warning...)
+        // TODO: use shared or unique pointers for situtations like this (to make it clear who owns it)
+        //   (and also look up weak pointers)
+        // TODO: maybe make this const...
         Material *matr;         // material for this surface
 };
 
@@ -41,17 +50,22 @@ class Surface {
  *  class to represent a triangle in 3D space
  *  a triangle patch is a triangle where the normals of the surface at each vertex are known.
  */
-class Triangle : public Surface {
+class Triangle final : public Surface {
     friend class Test;
     friend class Rasterizer;
     public:
-        Triangle(Vector3d points[3], Material *matr=NULL);
-        Triangle(Vector3d points[3], Vector3d norms[3], Material *matr=NULL);
-        HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
-        Vector3d getNormal(HitRecord hit, bool interpolate=false) const;
-        inline bool isPatch() {return patch;};
+        // TODO: start using nullptr (because NULL is less typesafe as an int...)
+        Triangle(Vector3d _points[3], Material *_matr=NULL);
+        Triangle(Vector3d _points[3], Vector3d _norms[3], Material *_matr=NULL);
+        HitRecord intersect(const Ray &ray, double d0=0, double d1=-1, bool debug=false) const override;
+        Vector3d getNormal(HitRecord hit, bool interpolate=false) const override;
+        inline bool isPatch() {return patch;}
         friend std::ostream &operator<<(std::ostream &sout, const Triangle &tri);
    private:
+        // TODO: consider using std::array (which is smarter than carrays, tracks its size)
+        //   ^and safer for usage as a param in Triangle constructor (ensuring param array is actually right size)
+        //   and use points.at(2) for indexing instead of [2] (more memory safe)
+        //std::array<Vector3d, 3> points;
         Vector3d points[3]; // vertices of triangle in 3D space
         bool patch;         // whether or not the normals at the vertices are known
         Vector3d norms[3];  // normal at each vertex (not used if patch==true)
@@ -65,16 +79,16 @@ class Triangle : public Surface {
  *
  *  a polygon patch is a triangle where the normals of the surface at each vertex are known.
  */
-class Polygon : public Surface {
+class Polygon final : public Surface {
     friend class Test;
     friend class Rasterizer;
     public:
         Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch=false, std::vector<Vector3d> normals=std::vector<Vector3d>());
-        HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
-        Vector3d getNormal(HitRecord hit, bool interpolate=false) const;
+        HitRecord intersect(const Ray &ray, double d0=0, double d1=-1, bool debug=false) const override;
+        Vector3d getNormal(HitRecord hit, bool interpolate=false) const override;
         friend std::ostream &operator<<(std::ostream &sout, const Polygon &poly);
         void printTriangles() const;
-        inline bool isPatch() {return patch;};
+        inline bool isPatch() {return patch;}
 
     protected:
         std::vector<Vector3d> vertices;  // vertices of triangle in 3D space
@@ -86,13 +100,13 @@ class Polygon : public Surface {
 /**
  *  Implements a class to represent a sphere in 3D space
  */
-class Sphere : public Surface {
+class Sphere final : public Surface {
     friend class Test;
     public:
-        Sphere(Material *matr, Vector3d center, double radius)
-            : Surface(matr), center(center), radius(radius) {};
-        HitRecord intersect(Ray ray, double d0=0, double d1=-1, bool debug=false) const;
-        Vector3d getNormal(HitRecord hit, bool interpolate=false) const;
+        Sphere(Material *_matr, Vector3d _center, double _radius)
+            : Surface(_matr), center(_center), radius(_radius) {}
+        HitRecord intersect(const Ray &ray, double d0=0, double d1=-1, bool debug=false) const override;
+        Vector3d getNormal(HitRecord hit, bool interpolate=false) const override;
         friend std::ostream &operator<<(std::ostream &sout, const Sphere &sp);
 
      private:

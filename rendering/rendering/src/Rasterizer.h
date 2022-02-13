@@ -36,7 +36,7 @@ struct Fragment {
     Vector3d color;    // interpolated color
     Vector3d normal;   // interpolated, in world space
     Vector3d worldPos; // position in world space
-    struct Fragment *next;
+    Fragment *next;
 };
 
 class Rasterizer {
@@ -57,6 +57,6 @@ class Rasterizer {
 
         std::vector<Triangle> triangles;        // vector of all triangles in scene
         SettingsNFF nff;
-        struct RasterizerSettings scene;
+        RasterizerSettings scene;
 };
 #endif

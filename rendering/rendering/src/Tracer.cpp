@@ -2,6 +2,7 @@
 #include "Tracer.h"
 #include <assert.h>
 #include <math.h>
+// TODO: stop using this namespace in every file
 using namespace std;
 
 ////////////////////////////
@@ -88,8 +89,8 @@ void RayTracer::render(std::string filename, int bounces, bool debug) {
     // position (in camera coordinates) of CENTER of top left corner pixel
     // locations are offset from the center of the image (0,0,0) (in camera coordinates)
     //                 deltaX * (num pixels to move)
-    double initX = 0 - deltaX * ((double) nff.v_resolution[0]/2 - (double) 1/2);
-    double initY = 0 + deltaX * ((double) nff.v_resolution[1]/2 - (double) 1/2);
+    const double initX{0.0 - deltaX * (nff.v_resolution[0] / 2.0) - 1.0/2.0};
+    const double initY{0.0 + deltaX * (nff.v_resolution[1] / 2.0) - 1.0/2.0};
 
     if (debug) {
         printf("w: (%g, %g, %g)\n", w[0], w[1], w[2]);
@@ -102,18 +103,18 @@ void RayTracer::render(std::string filename, int bounces, bool debug) {
     }
 
     // image of pixel values
-    const int HEIGHT = nff.v_resolution[1];
-    const int WIDTH = nff.v_resolution[0];
+    const std::size_t HEIGHT = static_cast<std::size_t>(nff.v_resolution[1]);
+    const std::size_t WIDTH = static_cast<std::size_t>(nff.v_resolution[0]);
     // allocate contiguous bytes for storing pixel color values
     unsigned char* pixels = new unsigned char[HEIGHT*WIDTH*3];
 
     // iterate over all pixels in the image ((0,0) is the top left corner pixel)
-    for (int j=0; j<HEIGHT; j++) {      // iterate over rows
-        for (int i=0; i<WIDTH; i++) {   // iterate over columns
+    for (std::size_t j=0; j<HEIGHT; j++) {      // iterate over rows
+        for (std::size_t i=0; i<WIDTH; i++) {   // iterate over columns
             // (i,j) is the current pixel (in image coordinates)
             // center of this pixel (in camera coordinates)
-            double x = initX + deltaX*i;
-            double y = initY - deltaX*j;
+            double x = initX + deltaX * static_cast<double>(i);
+            double y = initY - deltaX * static_cast<double>(j);
             double z = -(nff.v_from - nff.v_at).norm();
             // transform (center of this pixel) camera coordinates -> world coordinates
             Vector3d pos = x*u + y*v + z*w + nff.v_from;
@@ -123,16 +124,16 @@ void RayTracer::render(std::string filename, int bounces, bool debug) {
             // get the color for this pixel
             Vector3d color = trace(ray, nff.v_hither, -1, bounces, debug);
             // set color of pixel
-            for (int k=0; k<3; k++) {
-                color[k] = min(max(color[k], 0.0), 1.0); // force value in range [0,1]
-                pixels[j*(WIDTH*3) + (i*3) + k] = (int) (color[k] * 255);
+            for (std::size_t k=0; k<3; k++) {
+                color[static_cast<Eigen::Index>(k)] = min(max(color[static_cast<Eigen::Index>(k)], 0.0), 1.0); // force value in range [0,1]
+                pixels[j*(WIDTH*3) + i*3 + k] = static_cast<unsigned char>(color[static_cast<Eigen::Index>(k)] * 255);
             }
         }
     }
 
     // write image to file
     FILE *f = fopen(filename.c_str(), "wb");
-    fprintf(f, "P6\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
+    fprintf(f, "P6\n%zu %zu\n%d\n", WIDTH, HEIGHT, 255);
     fwrite(pixels, 1, HEIGHT*WIDTH*3, f);
     fclose(f);
     delete[] pixels;
@@ -156,7 +157,7 @@ Vector3d RayTracer::trace(Ray ray, double d0, double d1, int bounces, bool debug
     // ray intersected with an object
     //return matr->color; // if we're not doing any shading at all
     // TODO: if we add matr field to HitRecord, just use that...
-    Material *matr = nff.surfaces[hit.surfIndex]->matr;
+    Material *matr = nff.surfaces[static_cast<std::size_t>(hit.surfIndex)]->matr;
     Vector3d localColor = Vector3d(0,0,0);
 
     // do shading:::
@@ -175,7 +176,7 @@ Vector3d RayTracer::trace(Ray ray, double d0, double d1, int bounces, bool debug
         if (getHitRecord(Ray(hit.point, L), SHADOW_BIAS, -1, debug).dist != -1)
             continue; // light isn't visible
 
-        N = nff.surfaces[hit.surfIndex]->getNormal(hit, interpolate); // surface normal
+        N = nff.surfaces[static_cast<std::size_t>(hit.surfIndex)]->getNormal(hit, interpolate); // surface normal
         H = (L + V) / (L+V).norm(); // unit vector from hit.point bisecting angle between L and v
         R = -V + 2*(V.dot(N)) * N;  // reflection direction
 
@@ -208,7 +209,7 @@ HitRecord RayTracer::getHitRecord(Ray ray, double d0, double d1, bool debug) {
         if (hit.dist != -1 && (bestHit.dist == -1 || hit.dist < bestHit.dist)) {
             // we had our first intersection, or found a closer intersection
             bestHit = hit;
-            bestHit.surfIndex = i; // index of closest surface intersected by this ray
+            bestHit.surfIndex = static_cast<int>(i); // index of closest surface intersected by this ray
         }
     }
     return bestHit;

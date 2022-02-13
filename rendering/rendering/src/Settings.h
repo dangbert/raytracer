@@ -44,8 +44,8 @@ class Light {
     friend class Rasterizer;
     friend class Test;
     public:
-        Light(Vector3d pos, Vector3d color=Vector3d(1,1,1))
-            : color(color), pos(pos) {};
+        Light(Vector3d _pos, Vector3d _color=Vector3d(1,1,1))
+            : color(_color), pos(_pos) {}
     private:
         Vector3d color;
         Vector3d pos;
@@ -76,6 +76,7 @@ class SettingsNFF {
         // distance of plane in front of camera for which things closer to the camera
         // wont' be rendered:
         double v_hither;          // don't render things closer than this distance away
+        // TODO: make this a pair of std::size_t values:
         Eigen::Vector2i v_resolution;     // x resolution, y resolution
         std::vector<Surface*> surfaces;   // all surfaces in scene
         // all materials in nff file (surfaces will store a pointer to there respective material)

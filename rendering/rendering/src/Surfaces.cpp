@@ -16,14 +16,16 @@ using std::endl;
  * vertices: array of 3 vertices (Vector3d objects) for this triangle
  * matr:     pointer to material for this triangle
  */
-
-Triangle::Triangle(Vector3d points[3], Material *matr)
-    : Surface(matr), patch(false)
+Triangle::Triangle(Vector3d _points[3], Material *_matr)
+    : Surface(_matr), patch(false)
+    // TODO: consider using patch{false} syntax instead
+    //   (safer, removes implicit type conversions)
 {
+    // TODO: consider using std::size_t everywhere for indices
     for (int i=0; i<3; i++) {
-        this->points[i] = points[i];
-        this->norms[i] = Vector3d(0,0,0);
-        this->imgPoints[i] = Vector3d(0,0,0);
+        points[i] = _points[i];
+        norms[i] = Vector3d(0,0,0);
+        imgPoints[i] = Vector3d(0,0,0);
     }
 }
 
@@ -34,13 +36,13 @@ Triangle::Triangle(Vector3d points[3], Material *matr)
  * matr:     pointer to material for this triangle
  * norms:    normals of the triangles vertices
  */
-Triangle::Triangle(Vector3d points[3], Vector3d norms[3], Material *matr)
-    : Surface(matr), patch(true)
+Triangle::Triangle(Vector3d _points[3], Vector3d _norms[3], Material *_matr)
+    : Surface(_matr), patch(true)
 {
     for (int i=0; i<3; i++) {
-        this->points[i] = points[i];
-        this->norms[i] = norms[i];
-        this->imgPoints[i] = Vector3d(0,0,0);
+        points[i] = _points[i];
+        norms[i] = _norms[i];
+        imgPoints[i] = Vector3d(0,0,0);
     }
 }
 
@@ -49,7 +51,7 @@ Triangle::Triangle(Vector3d points[3], Vector3d norms[3], Material *matr)
  * not an intersection unless t0 <= t <= t1
  * (no upper bound if t1 is -1)
  */
-HitRecord Triangle::intersect(Ray ray, double d0, double d1, bool debug) const {
+HitRecord Triangle::intersect(const Ray &ray, double d0, double d1, bool debug) const {
     // ray: e + td
     // triangle a + B(b-a) + g(c-a)
     // solve system: Ax=b
@@ -135,8 +137,8 @@ std::ostream &operator<<(std::ostream &sout, const Triangle &tri) {
  * color:    the color of this polygon (1,1,1) for white
  *           (defaults to black (0,0,0))
  */
-Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch, std::vector<Vector3d> normals)
-    : Surface(matr), vertices(vertices), patch(patch), normals(normals)
+Polygon::Polygon(Material *_matr, std::vector<Vector3d> _vertices, bool _patch, std::vector<Vector3d> _normals)
+    : Surface(_matr), vertices(_vertices), patch(_patch), normals(_normals)
 {
     // create triangle fan
     for (unsigned int i=2; i<vertices.size(); i++) {
@@ -159,7 +161,7 @@ Polygon::Polygon(Material *matr, std::vector<Vector3d> vertices, bool patch, std
  * hither:  ignore intersections that are closer than hither (-1 to disable)
  * debug:   whether or not to print out debug info for this intersection check
  */
-HitRecord Polygon::intersect(Ray ray, double d0, double d1, bool debug) const {
+HitRecord Polygon::intersect(const Ray &ray, double d0, double d1, bool debug) const {
     HitRecord bestHit = HitRecord(SurfaceType::POLYGON, -1);
 
     for (unsigned int i=0; i<triangles.size(); i++) {
@@ -171,7 +173,7 @@ HitRecord Polygon::intersect(Ray ray, double d0, double d1, bool debug) const {
             // we hit a triangle for the first time, or a closer triangle
             // update bestHit
             hit.sType = SurfaceType::POLYGON;
-            hit.triIndex = i;
+            hit.triIndex = static_cast<int>(i);
             bestHit = hit;
         }
     }
@@ -185,7 +187,7 @@ HitRecord Polygon::intersect(Ray ray, double d0, double d1, bool debug) const {
  */
 Vector3d Polygon::getNormal(HitRecord hit, bool interpolate) const {
     // return the .getNormal() of the triangle we intersected
-    return triangles[hit.triIndex].getNormal(hit, interpolate);
+    return triangles[static_cast<unsigned int>(hit.triIndex)].getNormal(hit, interpolate);
 }
 
 /**
@@ -224,7 +226,7 @@ std::ostream& operator<<(std::ostream &sout, const Polygon &poly) {
 ////////////////////////////
 /////// Sphere class: //////
 ////////////////////////////
-HitRecord Sphere::intersect(Ray ray, double d0, double d1, bool debug) const {
+HitRecord Sphere::intersect(const Ray &ray, double d0, double d1, bool) const {
     // based on p77 in textbook 
     HitRecord hit(SurfaceType::SPHERE, -1);
 
@@ -270,7 +272,7 @@ HitRecord Sphere::intersect(Ray ray, double d0, double d1, bool debug) const {
  * where the given hit record is known to belong to this surface
  * and hit.t != -1
  */
-Vector3d Sphere::getNormal(HitRecord hit, bool interpolate) const {
+Vector3d Sphere::getNormal(HitRecord hit, bool) const {
     return (hit.point - center);
 }
 

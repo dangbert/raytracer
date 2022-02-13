@@ -33,6 +33,8 @@ fi
 
 
 cmake --build "${build_path}" --config "${config}"
+# building with single thread:
+#cmake --build "${build_path}" --config "${config}" --parallel=1
 
 
 cd "${build_path}"

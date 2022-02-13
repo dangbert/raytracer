@@ -129,7 +129,7 @@ int Test::testTriangles() {
     testOneTriangle(tri, ray, expd, ++count, debug);
 
     // hit a point along top edge of triangle (from origin)
-    ray = Ray(Vector3d(0,0,0), Vector3d(1, (double) 2/5, 5));
+    ray = Ray(Vector3d(0,0,0), Vector3d(1, 2.0/5.0, 5));
     expd = (ray.eye - ray.dir).norm();   // expected
     testOneTriangle(tri, ray, expd, ++count, debug);
 
@@ -168,8 +168,8 @@ int Test::testRasterizer(std::string filename) {
     //Fragment *frag = rast.getFrag(x, y, tri);
     //printf("is (%d, %d) in triangle: %d\n", x, y, (frag != NULL));
 
-    for (int y=(int) minY; y<=(int) maxY; y++) {
-        for (int x=(int) minX; x<=(int) maxX; x++) {
+    for (int y=minY; y<=maxY; y++) {
+        for (int x=minX; x<=maxX; x++) {
             Fragment *frag = rast.getFrag(x, y, tri);
             printf("is (%d, %d) in triangle: %d\n", x, y, (frag != NULL));
         }

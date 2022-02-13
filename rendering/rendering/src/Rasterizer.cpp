@@ -51,16 +51,15 @@ void Rasterizer::render(std::string filename, bool debug) {
         cout << nff << endl;
     }
 
-    // create image of pixel values
-    const int HEIGHT = nff.v_resolution[1];
-    const int WIDTH = nff.v_resolution[0];
+    const std::size_t HEIGHT = static_cast<std::size_t>(nff.v_resolution[1]);
+    const std::size_t WIDTH = static_cast<std::size_t>(nff.v_resolution[0]);
     // allocate contiguous bytes for storing pixel color values
     unsigned char* pixels = new unsigned char[HEIGHT*WIDTH*3];
     // 2D array containing a linked lists of fragments for each pixel
     Fragment ***frags = new Fragment**[HEIGHT];
-    for (int j=0; j<HEIGHT; j++) {      // iterate over rows
+    for (std::size_t j=0; j<HEIGHT; j++) {      // iterate over rows
         frags[j] = new Fragment*[WIDTH];
-        for (int i=0; i<WIDTH; i++) {   // iterate over columns
+        for (std::size_t i=0; i<WIDTH; i++) {   // iterate over columns
             frags[j][i] = NULL;
         }
     }
@@ -75,15 +74,16 @@ void Rasterizer::render(std::string filename, bool debug) {
 
     // write image to file
     FILE *f = fopen(filename.c_str(), "wb");
-    fprintf(f, "P6\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
+    fprintf(f, "P6\n%zu %zu\n%d\n", WIDTH, HEIGHT, 255);
     fwrite(pixels, 1, HEIGHT*WIDTH*3, f);
     fclose(f);
 
     // free up memory
     delete[] pixels;
     Fragment *cur, *next;
-    for (int j=0; j<HEIGHT; j++) {      // iterate over rows
-        for (int i=0; i<WIDTH; i++) {   // iterate over columns
+
+    for (std::size_t j=0; j<HEIGHT; j++) {      // iterate over rows
+        for (std::size_t i=0; i<WIDTH; i++) {   // iterate over columns
             cur = frags[j][i];
             if (cur == NULL)
                 continue;
@@ -221,7 +221,7 @@ Vector3d Rasterizer::shadePoint(Triangle &tri, int vertex) {
 /**
  *
  */
-void Rasterizer::rasterization(struct Fragment ***frags) {
+void Rasterizer::rasterization(Fragment ***frags) {
     int fragCount = 0;
     for (unsigned int i=0; i<triangles.size(); i++) {
         Triangle &tri = triangles[i];
@@ -249,8 +249,8 @@ void Rasterizer::rasterization(struct Fragment ***frags) {
 
         // iterate over pixels in bounding box (with corners (minX,minY) and (maxX,maxY))
         // (x,y) are the coordinates of the center of a (1x1) pixel
-        for (int y=(int) minY; y<=(int) maxY; y++) {
-            for (int x=(int) minX; x<=(int) maxX; x++) {
+        for (int y=static_cast<int>(minY); y<=static_cast<int>(maxY); y++) {
+            for (int x=static_cast<int>(minX); x<=static_cast<int>(maxX); x++) {
                 // ensure (x,y) is on the image (this is instead of clipping)
                 if (!(0<=x && x<nff.v_resolution[0] && 0<=y && y<nff.v_resolution[1])) {
                     skipCount++;
@@ -296,8 +296,9 @@ Fragment *Rasterizer::getFrag(int x, int y, Triangle &tri) {
     double B = ((Ay-Cy)*x + (Cx-Ax)*y + Ax*Cy - Cx*Ay) / ((Ay-Cy)*Bx + (Cx-Ax)*By + Ax*Cy -Cx*Ay);
     double g = ((Ay-By)*x + (Bx-Ax)*y + Ax*By - Bx*Ay) / ((Ay-By)*Cx + (Bx-Ax)*Cy + Ax*By - Bx*Ay);
     double a = 1.0 - B - g;
-    double g_num = ((Ay-By)*x + (Bx-Ax)*y + Ax*By - Bx*Ay);
-    double g_denom = ((Ay-By)*Cx + (Bx-Ax)*Cy + Ax*By - Bx*Ay);
+    // unused vars:
+    //double g_num = ((Ay-By)*x + (Bx-Ax)*y + Ax*By - Bx*Ay);
+    //double g_denom = ((Ay-By)*Cx + (Bx-Ax)*Cy + Ax*By - Bx*Ay);
 
     //  TODO: check a, B, g here to check if point is on triangle edge so we can deal with cracks (holes)
     if (a>=0 && B>=0 && g>=0) {
@@ -313,7 +314,7 @@ Fragment *Rasterizer::getFrag(int x, int y, Triangle &tri) {
     return frag;
 }
 
-void Rasterizer::fragmentProcessing(Fragment ***frags) {
+void Rasterizer::fragmentProcessing(Fragment ***) {
     // TODO: implement if desired
 }
 
@@ -343,8 +344,8 @@ void Rasterizer::blending(unsigned char* pixels, Fragment ***frags) {
 
             // set color of pixel
             for (int k=0; k<3; k++) {
-                color[k] = min(max(color[k], 0.0), 1.0); // force value in range [0,1]
-                pixels[j*(WIDTH*3) + (i*3) + k] = (int) (color[k] * 255);
+                color[static_cast<Eigen::Index>(k)] = min(max(color[static_cast<Eigen::Index>(k)], 0.0), 1.0); // force value in range [0,1]
+                pixels[j*(WIDTH*3) + i*3 + k] = static_cast<unsigned char>(color[static_cast<Eigen::Index>(k)] * 255);
             }
         }
     }
@@ -359,7 +360,7 @@ void Rasterizer::blending(unsigned char* pixels, Fragment ***frags) {
  *             (<number>.ppm will be appended for each frame)
  * debug:      whether to print out extra info for debugging
  */
-void Rasterizer::animate(std::string filename, bool debug) {
+void Rasterizer::animate(std::string filename, bool) {
     int count = 0;
     int bounces = 5;
     /*

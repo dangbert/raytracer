@@ -197,7 +197,8 @@ function(set_compiler_options target_name)
 
     _sco_add_compile_options("${target_name}"
         -Wall
-        -Weffc++
+        # see `man g++-10` (adds some other good warnings)
+        #-Weffc++
         -Weverything
         -Wextra
         -Wpedantic
@@ -218,6 +219,7 @@ function(set_compiler_options target_name)
         -Wctad-maybe-unsupported
         -Wctor-dtor-privacy
         -Wdate-time
+        # TOOD: re-enable this one / understand it better
         -Wdeprecated-copy-dtor
         -Wdeprecated-enum-enum-conversion
         -Wdeprecated-enum-float-conversion
@@ -226,16 +228,19 @@ function(set_compiler_options target_name)
         -Wduplicated-branches
         -Wduplicated-cond
         -Wextra-semi
-        -Wfloat-equal
+        # TOOD: definitely re-enable this after switching unit tests to use gtest
+        #   https://stackoverflow.com/q/18666691/5500073
+        #-Wfloat-equal
         -Wformat-overflow=2
         -Wformat-signedness
         -Wformat-truncation=2
         -Wformat=2
-        -Wframe-larger-than=1024
+        # warn when compiler generates a stack frame larger than a kb
+        #-Wframe-larger-than=1024
         -Wimplicit-fallthrough=5
-        -Winline
+        #-Winline
         -Winvalid-pch
-        -Wlarger-than=1024
+        #-Wlarger-than=1024
         -Wlogical-op
         -Wmismatched-tags
         -Wmissing-braces
@@ -248,7 +253,8 @@ function(set_compiler_options target_name)
         -Wold-style-cast
         -Woverloaded-virtual
         -Wpacked
-        -Wpadded
+        # I don't like this flag https://stackoverflow.com/q/52030714/5500073
+        #-Wpadded
         -Wplacement-new=2
         -Wredundant-decls
         -Wredundant-tags
@@ -258,13 +264,15 @@ function(set_compiler_options target_name)
         -Wsign-conversion
         -Wsign-promo
         -Wstack-protector
-        -Wstack-usage=1024
+        #-Wstack-usage=1024
         -Wstrict-null-sentinel
         -Wstrict-overflow=5
         -Wstringop-overflow=4
         -Wsuggest-attribute=format
         -Wsuggest-attribute=noreturn
         -Wsuggest-final-methods
+        # suggest final types (for classes), so at runtime program doesn't need to look up function in table
+        #   (because no other class is allowed to derive from this class / override this function)
         -Wsuggest-final-types
         -Wsuggest-override
         -Wswitch-default
