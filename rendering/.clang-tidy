@@ -1,0 +1,13 @@
+Checks: '*,
+        -google-readability-namespace-comments,
+        -llvm-header-guard,
+        -llvm-include-order,
+        -llvm-namespace-comment,
+        -llvmlibc-*,
+        -modernize-use-trailing-return-type'
+
+CheckOptions:
+    - key: modernize-use-auto.MinTypeNameLength
+      value: '0'
+
+WarningsAsErrors: '*'
