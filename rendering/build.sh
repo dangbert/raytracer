@@ -36,9 +36,13 @@ cmake --build "${build_path}" --config "${config}"
 # building with single thread:
 #cmake --build "${build_path}" --config "${config}" --parallel=1
 
+# TODO: find more elegant way to make/clean these softlinks?
+! [ -f raytracer ] && ln -s build/Release/rendering/raytracer .
+! [ -f rasterizer ] && ln -s build/Release/rendering/rasterizer .
 
 cd "${build_path}"
 ctest \
+    #-V \ # verbose
     --build-config "${config}" \
     --output-on-failure \
     --schedule-random \

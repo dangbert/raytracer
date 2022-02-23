@@ -19,14 +19,13 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     string filename = argv[1];
+
     // test my code
     /*
     Test test;
     test.testRasterizer(filename);
-    //test.testAll();
     return 0;
     */
-
 
     runRasterizer(filename);
     return 0;
