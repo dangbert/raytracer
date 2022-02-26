@@ -3,3 +3,6 @@
 raytracer
 rasterizer
 build/
+
+rendering/docs/html
+rendering/docs/latex

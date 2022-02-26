@@ -18,7 +18,7 @@ class Surface;
 class Test;
 
 /**
- * class for storing info about the  material properties of a Surface
+ * Stores material properties (e.g. of a Surface).
  */
 class Material {
     friend class SettingsNFF;
@@ -36,7 +36,7 @@ class Material {
 };
 
 /**
- * class representing a light source in 3D space
+ * Represents a light source in 3D space.
  */
 class Light {
     friend class SettingsNFF;
@@ -53,7 +53,7 @@ class Light {
 };
 
 /**
- * class for parsing and storing info from an NFF file
+ * Parses and stores data from an NFF file (represents a 3D scene).
  */
 class SettingsNFF {
     friend class RayTracer;

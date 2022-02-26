@@ -15,8 +15,8 @@ using Eigen::Vector3d;
 class Test;
 
 /**
- * class to represent a ray in 3d space
- * points on ray fit: seye + t * dir (for any t)
+ * Represent a ray in 3d space.
+ * Points along the ray fit are defined by: \f$eye + t * dir\f$ (for any t)
  */
 class Ray {
     friend class Test;
@@ -30,7 +30,7 @@ class Ray {
 };
 
 /**
- * class for storing info about the intersection of a ray with a surface
+ * Stores info about the (possible) intersection of a Ray with a Surface.
  * t is -1 if no intersection occurred
  */
 class HitRecord {
@@ -56,6 +56,9 @@ class HitRecord {
         int surfIndex;     // index of the surface intersected
 };
 
+/**
+ * Loads and renders an image of a 3D scene (from an nff file).
+ */
 class RayTracer {
     friend class Test;
     public:

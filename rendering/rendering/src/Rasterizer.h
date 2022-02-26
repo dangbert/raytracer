@@ -1,9 +1,9 @@
-#ifndef _RASTERIZER_H_
-#define _RASTERIZER_H_
-/* File: Rasterizer.h
- * This file defines classes necessary for Rasterizing
+/** \file Rasterizer.h
+ * Defines classes necessary for Rasterizing.
  * Dan Engbert - UMBC CMSC435 F18 Project 1
  */
+#ifndef _RASTERIZER_H_
+#define _RASTERIZER_H_
 #define SHADOW_BIAS 1.0e-6
 
 #include <Eigen/Dense>

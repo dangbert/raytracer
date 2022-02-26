@@ -19,8 +19,10 @@ class Rasterizer;
 class HitRecord;
 
 /**
- *  class for geometric surfaces to derive from
- *  a surface should not be modified after creating it
+ *  Abstract class for geometric surfaces to derive from.
+ *  Surfaces may have Material properties, and implement intersect() and getNormal() functions.
+ * 
+ *  A surface should not be modified after creating it.
  *  TOOD: consider making what is needed public,
  *    so client apps like Raytracer and Rasterizer can access what they need
  *    (without being friends)
@@ -43,12 +45,12 @@ class Surface {
         // TODO: use shared or unique pointers for situtations like this (to make it clear who owns it)
         //   (and also look up weak pointers)
         // TODO: maybe make this const...
-        Material *matr;         // material for this surface
+        Material *matr;         //!< material property of this surface
 };
 
 /**
- *  class to represent a triangle in 3D space
- *  a triangle patch is a triangle where the normals of the surface at each vertex are known.
+ * Represents a triangle in 3D space.
+ * Note: a triangle patch is a triangle where the normals of the surface at each vertex are known.
  */
 class Triangle final : public Surface {
     friend class Test;
@@ -74,10 +76,10 @@ class Triangle final : public Surface {
 };
 
 /**
- *  class to represent a polygon in 3D space
- *  only works for convex polygons at the moment
+ *  Represents a polygon in 3D space.
+ *  (Only works for convex polygons at the moment)
  *
- *  a polygon patch is a triangle where the normals of the surface at each vertex are known.
+ *  Note: A polygon patch is a triangle where the normals of the surface at each vertex are known.
  */
 class Polygon final : public Surface {
     friend class Test;
@@ -98,7 +100,7 @@ class Polygon final : public Surface {
 };
 
 /**
- *  Implements a class to represent a sphere in 3D space
+ *  Represents a sphere in 3D space.
  */
 class Sphere final : public Surface {
     friend class Test;
